@@ -9,7 +9,7 @@ const port = process.env.APP_PORT; // default port to listen
 
 // define a route handler for the default home page
 app.get('/', (req, res) => {
-  res.send('ok111');
+  res.send('Running nodejs with docker');
 });
 
 // start the Express server
