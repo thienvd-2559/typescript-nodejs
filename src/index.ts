@@ -3,7 +3,10 @@ import dotenv from 'dotenv';
 import logger from 'morgan';
 import path from 'path';
 
+// routers
 import indexRouter from './routes/index';
+import runningRouter from './routes/running';
+
 import winston from './config/winston';
 
 // initialize configuration
@@ -14,11 +17,8 @@ const app = express();
 app.use(logger('dev'));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/abc', indexRouter);
-// define a route handler for the default home page
-app.get('/', (req, res) => {
-  res.send('Running nodejs with docker!');
-});
+app.use('/', indexRouter);
+app.use('/running', runningRouter);
 
 // // catch 404 and forward to error handler
 app.use((req, res, next) => {
