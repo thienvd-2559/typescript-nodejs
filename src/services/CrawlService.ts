@@ -1,6 +1,8 @@
 import puppeteer from 'puppeteer';
-import winston from '../config/winston';
 import randomUseragent from 'random-useragent';
+import fs from 'fs';
+
+import winston from '../config/winston';
 
 export async function captureScreen() {
   try {
@@ -87,12 +89,35 @@ async function getTitle(link, page, key) {
     const titlePage = document.querySelector('#contents > div > div.columnSection.clearfix > div > div.bodySection > table > tbody > tr:nth-child(1) > td').innerText;
     // @ts-ignore
     const location = document.querySelector('#contents > div > div.columnSection.clearfix > div > div.bodySection > table > tbody > tr:nth-child(2) > td').innerText;
+    // @ts-ignore
+    const imageUrl = document.querySelector('#contents > div > div.columnSection.clearfix > div > div.imgSection > div > div.thumb.js_thumb > div.inner > div > ul:nth-child(1) > li:nth-child(1) > img').getAttribute('src');
+    // @ts-ignore
+    const iconUrl = document.querySelector('#contents > div > div.columnSection.clearfix > div > div.bodySection > ul.icons > li:nth-child(1) > span > img').getAttribute('src');
 
-    return {titlePage, location};
+    return {titlePage, location, imageUrl, iconUrl};
   });
+
+  await saveImage(page, dataPage.imageUrl);
+  await saveImage(page, `https://www.cbre-propertysearch.jp/${dataPage.iconUrl}`);
 
   winston.info(`Data page ${link} is ${JSON.stringify(dataPage)}`);
   await page.waitForTimeout(Math.random() * 1000);
 
   return page;
+}
+
+async function saveImage(page, link) {
+  const fileNameAr = link.split('/');
+  const fileName = fileNameAr[fileNameAr.length - 1];
+  const folderImages = 'logs/images';
+  const viewSource = await page.goto(link);
+  if (!fs.existsSync(folderImages)) {
+    fs.mkdirSync(folderImages);
+  }
+
+  fs.writeFile(`${folderImages}/${fileName}`, await viewSource.buffer(), (err) => {
+    if (err) {
+      return winston.info(err);
+    }
+  });
 }
