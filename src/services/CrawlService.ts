@@ -83,16 +83,20 @@ async function getTitle(link, page, key) {
     timeout: 3000000,
   });
   await page.waitForSelector('#contents > div > div.columnSection.clearfix > div > div.bodySection');
+  await page.waitForSelector('#contents > div > div.columnSection.clearfix > div > div.imgSection');
+  await page.waitForTimeout(5000);
 
   const dataPage = await page.evaluate(() => {
     // @ts-ignore
     const titlePage = document.querySelector('#contents > div > div.columnSection.clearfix > div > div.bodySection > table > tbody > tr:nth-child(1) > td').innerText;
     // @ts-ignore
     const location = document.querySelector('#contents > div > div.columnSection.clearfix > div > div.bodySection > table > tbody > tr:nth-child(2) > td').innerText;
-    // @ts-ignore
-    const imageUrl = document.querySelector('#contents > div > div.columnSection.clearfix > div > div.imgSection > div > div.thumb.js_thumb > div.inner > div > ul:nth-child(1) > li:nth-child(1) > img').getAttribute('src');
-    // @ts-ignore
-    const iconUrl = document.querySelector('#contents > div > div.columnSection.clearfix > div > div.bodySection > ul.icons > li:nth-child(1) > span > img').getAttribute('src');
+
+    const imageTag = document.querySelector('#contents > div > div.columnSection.clearfix > div > div.imgSection > div > div.thumb.js_thumb > div.inner > div > ul:nth-child(1) > li:nth-child(1) > img');
+    const imageUrl = imageTag ? imageTag.getAttribute('src') : '';
+
+    const iconTag = document.querySelector('#contents > div > div.columnSection.clearfix > div > div.bodySection > ul.icons > li:nth-child(1) > span > img');
+    const iconUrl = iconTag ? iconTag.getAttribute('src') : '';
 
     return {titlePage, location, imageUrl, iconUrl};
   });
@@ -107,17 +111,22 @@ async function getTitle(link, page, key) {
 }
 
 async function saveImage(page, link) {
-  const fileNameAr = link.split('/');
-  const fileName = fileNameAr[fileNameAr.length - 1];
-  const folderImages = 'logs/images';
-  const viewSource = await page.goto(link);
-  if (!fs.existsSync(folderImages)) {
-    fs.mkdirSync(folderImages);
-  }
-
-  fs.writeFile(`${folderImages}/${fileName}`, await viewSource.buffer(), (err) => {
-    if (err) {
-      return winston.info(err);
+  try {
+    winston.info(`Save image with ${link}`);
+    const fileNameAr = link.split('/');
+    const fileName = fileNameAr[fileNameAr.length - 1];
+    const folderImages = 'logs/images';
+    const viewSource = await page.goto(link);
+    if (!fs.existsSync(folderImages)) {
+      fs.mkdirSync(folderImages);
     }
-  });
+
+    fs.writeFile(`${folderImages}/${fileName}`, await viewSource.buffer(), (err) => {
+      if (err) {
+        return winston.info(err);
+      }
+    });
+  } catch (e) {
+    winston.error(`${link} is invalid`);
+  }
 }
