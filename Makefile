@@ -34,6 +34,6 @@ kill:
 ps:
 	docker-compose -f $(COMPOSE_FILE) -p $(PROJECT) ps
 
-.PHONY: laravel
-laravel:
-	docker exec -it souco_workspace /bin/bash
+.PHONY: nodejs
+nodejs:
+	docker exec -it nodejs-ts-docker /bin/bash
