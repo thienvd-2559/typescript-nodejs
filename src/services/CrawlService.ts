@@ -1,6 +1,7 @@
 import puppeteer from 'puppeteer';
 import randomUseragent from 'random-useragent';
 import fs from 'fs';
+import image from 'image-downloader';
 
 import winston from '../config/winston';
 
@@ -12,7 +13,7 @@ export async function captureScreen() {
     const page = await browser.newPage();
     await page.setViewport({width: 720, height: 720});
     // go to page
-    await page.goto('https://www.homes.co.jp/chintai/b-1446290000001/');
+    await page.goto('https://www.homes.co.jp/chintai/b-1446290000001/', {timeout: 90000});
     // capture screen and save
     await page.screenshot({path: 'house_detail.png'});
 
@@ -35,7 +36,7 @@ export async function crawlListPage() {
     winston.info(agent);
     await page.setUserAgent(agent);
     await page.setViewport({width: 1280, height: 720});
-    await page.goto('https://www.cbre-propertysearch.jp/industrial/tokyo/?q=東京都&page=1');
+    await page.goto('https://www.cbre-propertysearch.jp/industrial/tokyo/?q=東京都&page=1', {timeout: 90000});
     const totalPage = await page.evaluate(() => {
       return Number(document.querySelector('#contents > div > div.propertyList > div > div.tools.bottom > div > ul > li:nth-child(6) > a').innerHTML);
     });
@@ -54,7 +55,7 @@ export async function crawlListPage() {
 
 async function getUrlListPage(page, url) {
   winston.info(`Start crawl page ${url}`);
-  await page.goto(url);
+  await page.goto(url, {timeout: 90000});
 
   const articles = await page.evaluate(() => {
     const titles = document.querySelectorAll('div.itemGroup div.item h2.name a');
@@ -101,8 +102,8 @@ async function getTitle(link, page, key) {
     return {titlePage, location, imageUrl, iconUrl};
   });
 
-  await saveImage(page, dataPage.imageUrl);
-  await saveImage(page, `https://www.cbre-propertysearch.jp/${dataPage.iconUrl}`);
+  if (dataPage.imageUrl) await saveImage(dataPage.imageUrl);
+  if (dataPage.iconUrl) await saveImage(`https://www.cbre-propertysearch.jp/${dataPage.iconUrl}`);
 
   winston.info(`Data page ${link} is ${JSON.stringify(dataPage)}`);
   await page.waitForTimeout(Math.random() * 1000);
@@ -110,22 +111,24 @@ async function getTitle(link, page, key) {
   return page;
 }
 
-async function saveImage(page, link) {
+async function saveImage(link) {
   try {
     winston.info(`Save image with ${link}`);
     const fileNameAr = link.split('/');
     const fileName = fileNameAr[fileNameAr.length - 1];
     const folderImages = 'logs/images';
-    const viewSource = await page.goto(link);
+
     if (!fs.existsSync(folderImages)) {
       fs.mkdirSync(folderImages);
     }
 
-    fs.writeFile(`${folderImages}/${fileName}`, await viewSource.buffer(), (err) => {
-      if (err) {
-        return winston.info(err);
-      }
+    image.image({
+      url: link,
+      dest: `${folderImages}/${fileName}`,
+    }).catch((er) => {
+      return winston.info(er);
     });
+
   } catch (e) {
     winston.error(`${link} is invalid`);
   }
