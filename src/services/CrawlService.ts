@@ -133,7 +133,6 @@ async function saveImage(link) {
     }).catch((er) => {
       return winston.info(er);
     });
-
   } catch (e) {
     winston.error(`${link} is invalid`);
   }
