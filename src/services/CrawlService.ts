@@ -114,6 +114,7 @@ async function getTitle(link, page, key) {
 async function saveImage(link) {
   if (!link) {
     winston.error(`${link} is invalid`);
+    return;
   }
 
   try {
