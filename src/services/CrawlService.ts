@@ -102,8 +102,8 @@ async function getTitle(link, page, key) {
     return {titlePage, location, imageUrl, iconUrl};
   });
 
-  if (dataPage.imageUrl) await saveImage(dataPage.imageUrl);
-  if (dataPage.iconUrl) await saveImage(`https://www.cbre-propertysearch.jp/${dataPage.iconUrl}`);
+  await saveImage(dataPage.imageUrl);
+  await saveImage(`https://www.cbre-propertysearch.jp/${dataPage.iconUrl}`);
 
   winston.info(`Data page ${link} is ${JSON.stringify(dataPage)}`);
   await page.waitForTimeout(Math.random() * 1000);
@@ -112,6 +112,10 @@ async function getTitle(link, page, key) {
 }
 
 async function saveImage(link) {
+  if (!link) {
+    winston.error(`${link} is invalid`);
+  }
+
   try {
     winston.info(`Save image with ${link}`);
     const fileNameAr = link.split('/');
