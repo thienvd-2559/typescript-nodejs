@@ -1,18 +1,18 @@
 import puppeteer from 'puppeteer';
 import winston from '../config/winston';
-import C from './Constant';
-import ACCOUNT from './ConstantAccountSelector';
+import LOGIN from '../constants/ConstantLogin';
+import ACCOUNT from '../constants/ConstantAccountSelector';
 
-async function timeSheetServices() {
+async function timeSheetServices(url) {
   const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
   // const websiteContent = await page.content();
-  await page.goto('https://wsm.sun-asterisk.vn/en/dashboard/user_timesheets');
-  await page.click('a[class="wsm-btn btn-login"]');
+  await page.goto(url);
+  await page.click(ACCOUNT.CLICK_FORM);
   await page.click(ACCOUNT.USERNAME_SELECTOR);
-  await page.keyboard.type(C.username);
+  await page.keyboard.type(LOGIN.username);
   await page.click(ACCOUNT.PASSWORD_SELECTOR);
-  await page.keyboard.type(C.password);
+  await page.keyboard.type(LOGIN.password);
   await page.click(ACCOUNT.CTA_SELECTOR);
 
   setTimeout(async()=>{
@@ -33,7 +33,6 @@ async function timeSheetServices() {
       const electronicData = await page.evaluate(() => {
         const products = [];
         const data = document.querySelectorAll('.event-timesheets');
-
         data.forEach((product) => {
           const dataJson = {};
           try {
