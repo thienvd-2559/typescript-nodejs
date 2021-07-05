@@ -24,12 +24,15 @@
   },
   "homepage": "https://github.com/d10cn2btt/typescript-nodejs#readme",
   "dependencies": {
+    "@types/util.promisify": "^1.0.4",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "image-downloader": "^4.0.2",
     "morgan": "^1.10.0",
     "puppeteer": "^10.0.0",
     "random-useragent": "^0.5.0",
+    "url-exists": "^1.0.3",
+    "util": "^0.12.4",
     "winston": "^3.3.3"
   },
   "devDependencies": {
