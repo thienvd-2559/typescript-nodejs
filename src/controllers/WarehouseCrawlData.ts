@@ -1,5 +1,4 @@
 import { WarehouseCrawlDataServices, detailPageWarehouseServices } from '../services/WarehouseCrawlDataServices';
-
 export default class WarehouseController {
     public static async warehouse(req, res, next): Promise<any> {
         // WarehouseCrawlDataServices().then();
