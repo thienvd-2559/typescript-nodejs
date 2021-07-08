@@ -11,7 +11,7 @@ router.get('/crawl-list-page', CrawlController.crawlListPage);
 
 // warehouse crawl data
 router.get('/warehouse-crawl-data', WarehouseController.warehouse);
-router.get('/warehouse-detail-page', WarehouseController.detailPage);
+router.get('/warehouse-detail-page/:url', WarehouseController.detailPage);
 
 
 export default router;

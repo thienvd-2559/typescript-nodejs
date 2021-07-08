@@ -39,12 +39,13 @@ async function WarehouseCrawlDataServices() {
     return data;
   });
   winston.info(electronicData);
+  return electronicData;
 }
 
-async function detailPageWarehouseServices() {
+async function detailPageWarehouseServices(url) {
   const options = {
     method:'get',
-    uri:'https://www.cbre-propertysearch.jp/industrial/hokkaido/',
+    uri:`https://www.cbre-propertysearch.jp/industrial/${url}`,
   };
   const result = await request_promise(options);
   // console.log(result);
@@ -52,7 +53,7 @@ async function detailPageWarehouseServices() {
   const data = [];
   $('#contents > div > div.propertyList > div > div.itemGroup >.item').each(function(e){
     data.push({
-      掲載終了 : $(this).find(' div.inner > div > div.body > div.head > h2 > a').text(),
+      倉庫名 : $(this).find(' div.inner > div > div.body > div.head > h2 > a').text(),
       所在地 : $(this).find('div.inner > div > div.body > div.info > div > table > tbody > tr:nth-child(1) > td').text(),
       交通 : $(this).find('div.inner > div > div.body > div.info > div > table > tbody > tr:nth-child(2) > td').text(),
       規模 : $(this).find('div.inner > div > div.body > div.info > div > table > tbody > tr:nth-child(3) > td').text(),
@@ -60,6 +61,7 @@ async function detailPageWarehouseServices() {
     });
   });
   winston.info(data);
+  return data;
 }
 
 export { WarehouseCrawlDataServices, detailPageWarehouseServices };
