@@ -2,7 +2,7 @@ import puppeteer from 'puppeteer';
 import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
-import { warehouseCrawlDataConfig, detailPageWarehouseConfig } from '../config/WarehouseCrawlDataConfig'
+import { detailPageWarehouseConfig } from '../config/WarehouseCrawlDataConfig';
 
 async function WarehouseCrawlDataServices() {
   try {
@@ -16,7 +16,7 @@ async function WarehouseCrawlDataServices() {
       const resourceType = req.resourceType();
       // total '.' appear in a string
       const total = url.split('.').length - 1;
-      // show last string  
+      // show last string
       const video = url.split('\'')[total];
       // winston.info(video)
       if(videos.includes(video) === true || type.includes(resourceType) === true) {
@@ -32,7 +32,7 @@ async function WarehouseCrawlDataServices() {
     await page.content();
     const Domain = await page.evaluate(() => {
       const domain = [];
-      document.querySelectorAll(warehouseCrawlDataConfig.DOM).forEach((e) => {
+      document.querySelectorAll('#contents > div.topArea > div.section.areas > div > div >.group').forEach((e) => {
         const city = [];
         e.querySelectorAll('ul>li').forEach((el) => {
           // @ts-ignore
