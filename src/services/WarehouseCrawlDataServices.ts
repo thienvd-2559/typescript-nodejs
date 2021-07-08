@@ -1,6 +1,5 @@
 import puppeteer from 'puppeteer';
 import winston from '../config/winston';
-
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
 
@@ -10,44 +9,41 @@ async function WarehouseCrawlDataServices() {
     const page = await browser.newPage();
     await page.setRequestInterception(true);
     await page.on('request', (req) => {
-      const arrayTypeVideo = ['image', 'media'];
-      const endsWith = [ '.mp4', '.avi', '.flv', '.mov', '.wmv'];
+      const type = ['image', 'media'];
+      const videos = [ '.mp4', '.avi', '.flv', '.mov', '.wmv'];
       const url = req.url().toLowerCase();
       const resourceType = req.resourceType();
-      for(const typeVideoImage of arrayTypeVideo) {
-        for(const endWith of endsWith) {
-          if(resourceType === typeVideoImage && url.endsWith(endWith)) {
-            req.abort();
-          } else {
-            req.continue();
-          }
-        }
+      const total = url.split('.').length - 1;
+      const video = url.split('\'')[total];
+      if(videos.includes(video) === true || type.includes(resourceType) === true) {
+        req.abort();
+      } else {
+        req.continue();
       }
     });
-
     await page.goto('https://www.cbre-propertysearch.jp/industrial/', {
       waitUntil: 'load',
       timeout: 30000,
     });
     await page.content();
-    const electronicData = await page.evaluate(() => {
-      const data = [];
+    const Domain = await page.evaluate(() => {
+      const domain = [];
       const DOM  = '#contents > div.topArea > div.section.areas > div > div >.group';
       document.querySelectorAll(DOM).forEach((e) => {
-        const products = [];
+        const city = [];
         e.querySelectorAll('ul>li').forEach((el) => {
           // @ts-ignore
-          products.push(el.innerText);
+          city.push(el.innerText);
         });
-        data.push({
-          name: e.querySelector('p').innerHTML,
-          products,
+        domain.push({
+          domain: e.querySelector('p').innerHTML,
+          city,
         });
       });
-      return data;
+      return domain;
     });
-    winston.info(electronicData);
-    return electronicData;
+    // winston.info(Domain);
+    return Domain;
   } catch (error) {
     winston.info(error);
   }
