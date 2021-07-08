@@ -14,26 +14,30 @@ async function WarehouseCrawlDataServices() {
       const videoExtension = ['.mp4', '.avi', '.flv', '.mov', '.wmv'];
       const url = req.url().toLowerCase();
       const resourceType = req.resourceType();
+      const splitStringVideo = url.split('.');
       // total '.' appear in a string
-      const total = url.split('.').length - 1;
+      const total = splitStringVideo.length - 1;
       // show last string
-      const videoTail = url.split('\'')[total];
-      if ( videoExtension.includes(videoTail) === true || typeImageVideo.includes(resourceType) === true) {
+      const videoTail = splitStringVideo[total];
+      if (
+        videoExtension.includes(videoTail) === true ||
+        typeImageVideo.includes(resourceType) === true
+      ) {
         req.abort();
       } else {
         req.continue();
       }
     });
-    winston.info(page);
+    winston.info("Redirecting to page.on('request')");
 
     await page.goto('https://www.cbre-propertysearch.jp/industrial/', {
       waitUntil: 'load',
       timeout: 30000,
     });
-    winston.info(page);
+    winston.info("Redirecting to ['https://www.cbre-propertysearch.jp/industrial/']");
 
     await page.content();
-    winston.info(await page.content())
+    winston.info("Redirecting to page.content");
 
     return await page.evaluate(() => {
       const domain = [];
