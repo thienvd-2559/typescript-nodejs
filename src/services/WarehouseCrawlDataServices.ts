@@ -2,6 +2,7 @@ import puppeteer from 'puppeteer';
 import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
+import { warehouseCrawlDataConfig, detailPageWarehouseConfig } from '../config/WarehouseCrawlDataConfig'
 
 async function WarehouseCrawlDataServices() {
   try {
@@ -13,8 +14,11 @@ async function WarehouseCrawlDataServices() {
       const videos = [ '.mp4', '.avi', '.flv', '.mov', '.wmv'];
       const url = req.url().toLowerCase();
       const resourceType = req.resourceType();
+      // total '.' appear in a string
       const total = url.split('.').length - 1;
+      // show last string  
       const video = url.split('\'')[total];
+      // winston.info(video)
       if(videos.includes(video) === true || type.includes(resourceType) === true) {
         req.abort();
       } else {
@@ -28,8 +32,7 @@ async function WarehouseCrawlDataServices() {
     await page.content();
     const Domain = await page.evaluate(() => {
       const domain = [];
-      const DOM  = '#contents > div.topArea > div.section.areas > div > div >.group';
-      document.querySelectorAll(DOM).forEach((e) => {
+      document.querySelectorAll(warehouseCrawlDataConfig.DOM).forEach((e) => {
         const city = [];
         e.querySelectorAll('ul>li').forEach((el) => {
           // @ts-ignore
@@ -56,22 +59,16 @@ async function detailPageWarehouseServices(url) {
       uri:`https://www.cbre-propertysearch.jp/industrial/${url}`,
     };
     const result = await request_promise(options);
-    // console.log(result);
+    // winston.info(result);
     const $ = cheerio.load(result);
     const dataWarehouse = [];
-    const DOM = '#contents > div > div.propertyList > div > div.itemGroup >.item';
-    const DOM_倉庫名 = 'div.inner > div > div.body > div.head > h2 > a';
-    const DOM_所在地 = 'div.inner > div > div.body > div.info > div > table > tbody > tr:nth-child(1) > td';
-    const DOM_交通 = 'div.inner > div > div.body > div.info > div > table > tbody > tr:nth-child(2) > td';
-    const DOM_規模 = 'div.inner > div > div.body > div.info > div > table > tbody > tr:nth-child(3) > td';
-    const DOM_竣工 = 'div.inner > div > div.body > div.info > div > table > tbody > tr:nth-child(4) > td';
-    $(DOM).each(function(e){
+    $(detailPageWarehouseConfig.DOM).each(function(e){
       dataWarehouse.push({
-        倉庫名 : $(this).find(DOM_倉庫名).text(),
-        所在地 : $(this).find(DOM_所在地).text(),
-        交通 : $(this).find(DOM_交通).text(),
-        規模 : $(this).find(DOM_規模).text(),
-        竣工 : $(this).find(DOM_竣工).text(),
+        倉庫名 : $(this).find(detailPageWarehouseConfig.DOM_倉庫名).text(),
+        所在地 : $(this).find(detailPageWarehouseConfig.DOM_所在地).text(),
+        交通 : $(this).find(detailPageWarehouseConfig.DOM_交通).text(),
+        規模 : $(this).find(detailPageWarehouseConfig.DOM_規模).text(),
+        竣工 : $(this).find(detailPageWarehouseConfig.DOM_竣工).text(),
       });
     });
     winston.info(dataWarehouse);
