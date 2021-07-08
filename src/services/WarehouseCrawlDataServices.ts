@@ -18,18 +18,22 @@ async function WarehouseCrawlDataServices() {
       const total = url.split('.').length - 1;
       // show last string
       const videoTail = url.split('\'')[total];
-      winston.info(videoTail);
       if ( videoExtension.includes(videoTail) === true || typeImageVideo.includes(resourceType) === true) {
         req.abort();
       } else {
         req.continue();
       }
     });
+    winston.info(page);
+
     await page.goto('https://www.cbre-propertysearch.jp/industrial/', {
       waitUntil: 'load',
       timeout: 30000,
     });
+    winston.info(page);
+
     await page.content();
+    winston.info(await page.content())
 
     return await page.evaluate(() => {
       const domain = [];
@@ -62,6 +66,7 @@ async function detailPageWarehouseServices(url) {
       uri: `https://www.cbre-propertysearch.jp/industrial/${url}`,
     };
     const result = await request_promise(options);
+    winston.info(result);
     const $ = cheerio.load(result);
     const dataWarehouse = [];
     $(detailPageWarehouseConfig.DOM).each(function (e) {
