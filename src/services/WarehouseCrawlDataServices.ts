@@ -2,7 +2,7 @@ import puppeteer from 'puppeteer';
 import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
-import { detailPageWarehouseConfig } from '../config/WarehouseCrawlDataConfig';
+import { detailPageWarehouseConfig, crawlDetailPageWareHokkaidoConfig } from '../config/WarehouseCrawlDataConfig';
 
 async function WarehouseCrawlDataServices() {
   try {
@@ -28,16 +28,16 @@ async function WarehouseCrawlDataServices() {
         req.continue();
       }
     });
-    winston.info("Redirecting to page.on('request')");
+    winston.info('Redirecting to page.on(\'request\')');
 
     await page.goto('https://www.cbre-propertysearch.jp/industrial/', {
       waitUntil: 'load',
       timeout: 30000,
     });
-    winston.info("Redirecting to ['https://www.cbre-propertysearch.jp/industrial/']");
+    winston.info('Redirecting to [\'https://www.cbre-propertysearch.jp/industrial/\']');
 
     await page.content();
-    winston.info("Redirecting to page.content");
+    winston.info('Redirecting to page.content');
 
     return await page.evaluate(() => {
       const domain = [];
@@ -89,4 +89,60 @@ async function detailPageWarehouseServices(url) {
   }
 }
 
-export { WarehouseCrawlDataServices, detailPageWarehouseServices };
+
+async function crawlDetailPageWareHokkaidoServices() {
+  try {
+    const dataPageWareHokkaido = [];
+    const options = {
+      method: 'get',
+      uri: 'https://www.cbre-propertysearch.jp/industrial/hokkaido/',
+    };
+    const result = await request_promise(options);
+    winston.info('result');
+    const $ = cheerio.load(result);
+    const dataWarehouse = [];
+    $(detailPageWarehouseConfig.DOM).each(function (e) {
+      dataWarehouse.push(
+        $(this).find(detailPageWarehouseConfig.DOM_Warehouse).attr('href'),
+      );
+    });
+    winston.info('dataWarehouse');
+
+    for(const i of dataWarehouse) {
+      const optionsHokkaido = {
+        method: 'get',
+        uri: `https://www.cbre-propertysearch.jp${i}`,
+      };
+      winston.info('optionsHokkaido');
+      const resultHokkaido = await request_promise(optionsHokkaido);
+      winston.info('resultHokkaido');
+      const $2 = cheerio.load(resultHokkaido);
+      const normalizeText = (text) => {
+        return text.replace(/\\n/g, '').trim();
+      };
+      $2(crawlDetailPageWareHokkaidoConfig.DOM).each(function (e) {
+        dataPageWareHokkaido.push({
+          '物件名': normalizeText($2(this).find(crawlDetailPageWareHokkaidoConfig.DOM_Property_Name).text()),
+          '所在地': normalizeText($2(this).find(crawlDetailPageWareHokkaidoConfig.DOM_Location).text()),
+          '交通': normalizeText($2(this).find(crawlDetailPageWareHokkaidoConfig.DOM_Traffic).text()),
+          '用途地域': normalizeText($2(this).find(crawlDetailPageWareHokkaidoConfig.DOM_Use_District).text()),
+          '建蔽率 / 容積率'	: normalizeText($2(this).find(crawlDetailPageWareHokkaidoConfig.DOM_Building_Coverage_Ratio_Floor_Area_Ratio).text()),
+          '延床面積'	: normalizeText($2(this).find(crawlDetailPageWareHokkaidoConfig.DOM_Total_Floor_Area).text()),
+          '昇降機': normalizeText($2(this).find(crawlDetailPageWareHokkaidoConfig.DOM_Elevator).text()),
+          '１階床形式': normalizeText($2(this).find(crawlDetailPageWareHokkaidoConfig.DOM_1ST_Floor_Type).text()),
+          '冷蔵冷凍設備': normalizeText($2(this).find(crawlDetailPageWareHokkaidoConfig.DOM_Refrigerating_And_Freezing_Equipment).text()),
+          'icon': normalizeText($2(this).find(crawlDetailPageWareHokkaidoConfig.DOM_Icon).text()),
+          'icon2': normalizeText($2(this).find(crawlDetailPageWareHokkaidoConfig.DOM_Icon2).text()),
+          'icon3': normalizeText($2(this).find(crawlDetailPageWareHokkaidoConfig.DOM_Icon3).text()),
+        });
+      });
+      winston.info(dataPageWareHokkaido);
+    }
+
+    return dataPageWareHokkaido;
+  } catch (error) {
+    winston.info(error);
+  }
+}
+
+export { WarehouseCrawlDataServices, detailPageWarehouseServices, crawlDetailPageWareHokkaidoServices };
