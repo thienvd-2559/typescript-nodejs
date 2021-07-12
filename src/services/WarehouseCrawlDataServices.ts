@@ -117,7 +117,7 @@ async function detailPageProvincial() {
       };
       winston.info('optionsTokyo');
       const resultTokyo = await request_promise(optionsTokyo);
-      winston.info('resultHokkaido');
+      winston.info('resultTokyo');
       const operator = cheerio.load(resultTokyo);
       operator(LIST_STORE.DOM_STORE).each(function (e) {
         dataPageWareTokyo.push({
