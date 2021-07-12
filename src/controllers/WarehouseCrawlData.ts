@@ -1,4 +1,4 @@
-import { WarehouseCrawlDataServices, detailPageWarehouseServices, crawlDetailPageWareHokkaidoServices } from '../services/WarehouseCrawlDataServices';
+import { WarehouseCrawlDataServices, detailPageWarehouseServices, crawlDetailPageWareTokyoServices } from '../services/WarehouseCrawlDataServices';
 export default class WarehouseController {
   public static async warehouse(req, res, next): Promise<any> {
     // WarehouseCrawlDataServices().then();
@@ -17,10 +17,10 @@ export default class WarehouseController {
       data: detailPageWarehouse,
     });
   }
-  public static async crawlDetailPageWareHokkaido(req: any, res: any, next: any) {
-    const detailPageHokkaido = await crawlDetailPageWareHokkaidoServices();
+  public static async crawlDetailPageWareTokyo(req: any, res: any, next: any) {
+    const detailPageTokio = await crawlDetailPageWareTokyoServices();
     return res.json({
-      data: detailPageHokkaido,
+      data: detailPageTokio,
     });
   }
 }
