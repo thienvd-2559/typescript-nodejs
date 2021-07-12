@@ -108,10 +108,11 @@ async function crawlDetailPageWareTokyoServices() {
     });
     winston.info('dataWarehouse');
 
-    for(const i of dataWarehouse) {
+    for(let i = 0; i < dataWarehouse.length; i++) {
+      const start = Date.now();
       const optionsTokyo = {
         method: 'GET',
-        uri: `https://www.cbre-propertysearch.jp${i}`,
+        uri: `https://www.cbre-propertysearch.jp${dataWarehouse[i]}`,
       };
       winston.info('optionsTokyo');
       const resultTokyo = await request_promise(optionsTokyo);
@@ -122,6 +123,8 @@ async function crawlDetailPageWareTokyoServices() {
       };
       $2(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM).each(function (e) {
         dataPageWareTokyo.push({
+          '画像_1': $2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_IMAGE_1).attr('data-src'),
+          '画像_2': $2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_IMAGE_2).attr('data-src'),
           '物件名': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_PROPERTY_NAME).text()),
           '所在地': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_LOCATION).text()),
           '交通': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_TRAFFIC).text()),
@@ -146,10 +149,14 @@ async function crawlDetailPageWareTokyoServices() {
           'icon6': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_ICON6).text()),
           'icon7': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_ICON7).text()),
         });
+        const dateTimeRequest = (Date.now() - start)/1000;
+        winston.info({
+          'Request' : i + 1,
+          'Request time': dateTimeRequest,
+        });
       });
-      winston.info(dataPageWareTokyo);
+      winston.info('dataPageWareTokyo');
     }
-
     return dataPageWareTokyo;
   } catch (error) {
     winston.info(error);

@@ -9,6 +9,8 @@ const DETAIL_PAGE_WARE_HOUSE_CONFIG = {
 
 const CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG = {
   DOM: '#contents > div > div.columnSection.clearfix',
+  DOM_IMAGE_1: 'div > div.imgSection > div > div.photo > div.inner > div > div:nth-child(1) > img',
+  DOM_IMAGE_2: 'div > div.imgSection > div > div.photo > div.inner > div > div:nth-child(2) > img',
   DOM_PROPERTY_NAME: 'div > div.bodySection > table > tbody > tr:nth-child(1) > td',
   DOM_LOCATION: 'div > div.bodySection > table > tbody > tr:nth-child(2) > td',
   DOM_TRAFFIC: 'div > div.bodySection > table > tbody > tr:nth-child(3) > td',
