@@ -1,22 +1,22 @@
-import { WarehouseCrawlDataServices, detailPageWarehouseServices, crawlDetailPageWareTokyoServices } from '../services/WarehouseCrawlDataServices';
+import { warehouseCrawlData, detailPageWarehouse, detailPageProvincial } from '../services/WarehouseCrawlDataServices';
 export default class WarehouseController {
   public static async warehouse(req, res, next): Promise<any> {
-    const warehouse = await WarehouseCrawlDataServices();
+    const warehouse = await warehouseCrawlData();
     return res.json({
       data: warehouse,
     });
   }
-  public static async detailPage(req: any, res: any, next: any) {
+  public static async detailWarehouse(req: any, res: any, next: any) {
     const url = req.params.url;
-    const detailPageWarehouse = await detailPageWarehouseServices(url);
+    const detailWarehouse = await detailPageWarehouse(url);
     return res.json({
-      data: detailPageWarehouse,
+      data: detailWarehouse,
     });
   }
-  public static async crawlDetailPageWareTokyo(req: any, res: any, next: any) {
-    const detailPageTokio = await crawlDetailPageWareTokyoServices();
+  public static async detailProvincial(req: any, res: any, next: any) {
+    const detailProvincial = await detailPageProvincial();
     return res.json({
-      data: detailPageTokio,
+      data: detailProvincial,
     });
   }
 }
