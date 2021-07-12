@@ -1,10 +1,6 @@
 import { WarehouseCrawlDataServices, detailPageWarehouseServices, crawlDetailPageWareTokyoServices } from '../services/WarehouseCrawlDataServices';
 export default class WarehouseController {
   public static async warehouse(req, res, next): Promise<any> {
-    // WarehouseCrawlDataServices().then();
-    // return res.json({
-    //     title: 'connect data',
-    // });
     const warehouse = await WarehouseCrawlDataServices();
     return res.json({
       data: warehouse,

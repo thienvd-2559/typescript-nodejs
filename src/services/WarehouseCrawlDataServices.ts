@@ -2,7 +2,7 @@ import puppeteer from 'puppeteer';
 import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
-import { detailPageWarehouseConfig, crawlDetailPageWareTokyoConfig } from '../config/WarehouseCrawlDataConfig';
+import { DETAIL_PAGE_WARE_HOUSE_CONFIG, CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG } from '../config/WarehouseCrawlDataConfig';
 
 async function WarehouseCrawlDataServices() {
   try {
@@ -66,20 +66,20 @@ async function WarehouseCrawlDataServices() {
 async function detailPageWarehouseServices(url) {
   try {
     const options = {
-      method: 'get',
+      method: 'GET',
       uri: `https://www.cbre-propertysearch.jp/industrial/${url}`,
     };
     const result = await request_promise(options);
     winston.info(result);
     const $ = cheerio.load(result);
     const dataWarehouse = [];
-    $(detailPageWarehouseConfig.DOM).each(function (e) {
+    $(DETAIL_PAGE_WARE_HOUSE_CONFIG.DOM).each(function (e) {
       dataWarehouse.push({
-        倉庫名: $(this).find(detailPageWarehouseConfig.DOM_Warehouse).text(),
-        所在地: $(this).find(detailPageWarehouseConfig.DOM_Location).text(),
-        交通: $(this).find(detailPageWarehouseConfig.DOM_Traffic).text(),
-        規模: $(this).find(detailPageWarehouseConfig.DOM_Scale).text(),
-        竣工: $(this).find(detailPageWarehouseConfig.DOM_Completion).text(),
+        倉庫名: $(this).find(DETAIL_PAGE_WARE_HOUSE_CONFIG.DOM_WAREHOUSE).text(),
+        所在地: $(this).find(DETAIL_PAGE_WARE_HOUSE_CONFIG.DOM_LOCATION).text(),
+        交通: $(this).find(DETAIL_PAGE_WARE_HOUSE_CONFIG.DOM_TRAFFIC).text(),
+        規模: $(this).find(DETAIL_PAGE_WARE_HOUSE_CONFIG.DOM_SCALE).text(),
+        竣工: $(this).find(DETAIL_PAGE_WARE_HOUSE_CONFIG.DOM_COMPLETION).text(),
       });
     });
 
@@ -94,23 +94,23 @@ async function crawlDetailPageWareTokyoServices() {
   try {
     const dataPageWareTokyo = [];
     const options = {
-      method: 'get',
+      method: 'GET',
       uri: 'https://www.cbre-propertysearch.jp/industrial/tokyo/',
     };
     const result = await request_promise(options);
     winston.info('result');
     const $ = cheerio.load(result);
     const dataWarehouse = [];
-    $(detailPageWarehouseConfig.DOM).each(function (e) {
+    $(DETAIL_PAGE_WARE_HOUSE_CONFIG.DOM).each(function (e) {
       dataWarehouse.push(
-        $(this).find(detailPageWarehouseConfig.DOM_Warehouse).attr('href'),
+        $(this).find(DETAIL_PAGE_WARE_HOUSE_CONFIG.DOM_WAREHOUSE).attr('href'),
       );
     });
     winston.info('dataWarehouse');
 
     for(const i of dataWarehouse) {
       const optionsTokyo = {
-        method: 'get',
+        method: 'GET',
         uri: `https://www.cbre-propertysearch.jp${i}`,
       };
       winston.info('optionsTokyo');
@@ -120,31 +120,31 @@ async function crawlDetailPageWareTokyoServices() {
       const normalizeText = (text) => {
         return text.replace(/\\n/g, '').trim();
       };
-      $2(crawlDetailPageWareTokyoConfig.DOM).each(function (e) {
+      $2(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM).each(function (e) {
         dataPageWareTokyo.push({
-          '物件名': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Property_Name).text()),
-          '所在地': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Location).text()),
-          '交通': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Traffic).text()),
-          '用途地域': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Use_District).text()),
-          '建蔽率 / 容積率'	: normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Building_Coverage_Ratio_Floor_Area_Ratio).text()),
-          '竣工年月'	: normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Date_Of_Completion).text()),
-          '規模': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Scale).text()),
-          '構造': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Construction).text()),
-          '延床面積': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Total_Floor_Area).text()),
-          '昇降機': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Elevator).text()),
-          '天井高備考': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Ceiling_Height_Remarks).text()),
-          '床荷重': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Floor_Load).text()),
-          '１階床形式': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_1st_Floor_Type).text()),
-          '床形式備考': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Floor_Type_Remarks).text()),
-          '冷蔵冷凍設備': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Refrigerating_And_Freezing_Equipment).text()),
-          '建物備考': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Building_Remarks).text()),
-          'icon': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Icon).text()),
-          'icon2': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Icon2).text()),
-          'icon3': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Icon3).text()),
-          'icon4': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Icon4).text()),
-          'icon5': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Icon5).text()),
-          'icon6': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Icon6).text()),
-          'icon7': normalizeText($2(this).find(crawlDetailPageWareTokyoConfig.DOM_Icon7).text()),
+          '物件名': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_PROPERTY_NAME).text()),
+          '所在地': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_LOCATION).text()),
+          '交通': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_TRAFFIC).text()),
+          '用途地域': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_USE_DISTRICT).text()),
+          '建蔽率 / 容積率'	: normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_BUILDING_COVERAGE_RATIO_FLOOR_AREA_RATIO).text()),
+          '竣工年月'	: normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_DATE_OF_COMPLETION).text()),
+          '規模': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_SCALE).text()),
+          '構造': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_CONSTRUCTION).text()),
+          '延床面積': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_TOTAL_FLOOR_AREA).text()),
+          '昇降機': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_ELEVATOR).text()),
+          '天井高備考': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_CEILING_HEIGHT_REMARKS).text()),
+          '床荷重': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_FLOOR_LOAD).text()),
+          '１階床形式': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_1ST_FLOOR_TYPE).text()),
+          '床形式備考': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_FLOOR_TYPE_REMARKS).text()),
+          '冷蔵冷凍設備': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_REFRIGERATING_AND_FREEZING_EQUIPMENT).text()),
+          '建物備考': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_BUILDING_REMARKS).text()),
+          'icon': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_ICON).text()),
+          'icon2': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_ICON2).text()),
+          'icon3': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_ICON3).text()),
+          'icon4': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_ICON4).text()),
+          'icon5': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_ICON5).text()),
+          'icon6': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_ICON6).text()),
+          'icon7': normalizeText($2(this).find(CRAWL_DETAIL_PAGE_WARE_TOKYO_CONFIG.DOM_ICON7).text()),
         });
       });
       winston.info(dataPageWareTokyo);
