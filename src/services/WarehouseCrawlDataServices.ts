@@ -126,7 +126,7 @@ async function detailPageProvincial() {
       });
       dataPage = Object.assign({}, dataImage);
       operator(LIST_STORE.DOM_TABLE).each(function(){
-        dataPage[operator(this).find('th').text()]= operator(this).find('td').text();
+        dataPage[normalizeText(operator(this).find('th').text())]= normalizeText(operator(this).find('td').text());
       });
       // winston.info(data);
       dataPageWare.push(dataPage);
