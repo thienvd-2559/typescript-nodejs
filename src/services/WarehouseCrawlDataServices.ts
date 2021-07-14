@@ -93,7 +93,7 @@ async function detailPageWarehouse(url) {
 
 async function detailPageProvincial() {
   try {
-    const dataPageWareTokyo = [];
+    const dataPageWare = [];
     const options = {
       method: 'GET',
       uri: `${URL}tokyo/`,
@@ -119,43 +119,26 @@ async function detailPageProvincial() {
       const resultTokyo = await request_promise(optionsTokyo);
       winston.info('resultTokyo');
       const operator = cheerio.load(resultTokyo);
-      operator(LIST_STORE.DOM_STORE).each(function (e) {
-        dataPageWareTokyo.push({
-          'Image(1)': operator(this).find(LIST_STORE.DOM_IMAGE_1).attr('data-src'),
-          'Image(2)': operator(this).find(LIST_STORE.DOM_IMAGE_2).attr('data-src'),
-          'Name': normalizeText(operator(this).find(LIST_STORE.DOM_NAME).text()),
-          'Location': normalizeText(operator(this).find(LIST_STORE.DOM_LOCATION).text()),
-          'Traffic': normalizeText(operator(this).find(LIST_STORE.DOM_TRAFFIC).text()),
-          'District': normalizeText(operator(this).find(LIST_STORE.DOM_DISTRICT).text()),
-          'Coverage / Ratio'	: normalizeText(operator(this).find(LIST_STORE.DOM_COVERAGE_RATIO).text()),
-          'Date'	: normalizeText(operator(this).find(LIST_STORE.DOM_DATE).text()),
-          'Scale': normalizeText(operator(this).find(LIST_STORE.DOM_SCALE).text()),
-          'Construction': normalizeText(operator(this).find(LIST_STORE.DOM_CONSTRUCTION).text()),
-          'Total': normalizeText(operator(this).find(LIST_STORE.DOM_TOTAL).text()),
-          'Elevator': normalizeText(operator(this).find(LIST_STORE.DOM_ELEVATOR).text()),
-          'CeilingHeight': normalizeText(operator(this).find(LIST_STORE.DOM_CEILING_HEIGHT).text()),
-          'FloorLoad': normalizeText(operator(this).find(LIST_STORE.DOM_FLOOR_LOAD).text()),
-          '1stFloorType': normalizeText(operator(this).find(LIST_STORE.DOM_FLOOR).text()),
-          'Floor': normalizeText(operator(this).find(LIST_STORE.DOM_FLOOR_TYPES).text()),
-          'Equipment': normalizeText(operator(this).find(LIST_STORE.DOM_EQUIPMENT).text()),
-          'Building': normalizeText(operator(this).find(LIST_STORE.DOM_BUILDING).text()),
-          'icon': normalizeText(operator(this).find(LIST_STORE.DOM_ICON).text()),
-          'icon2': normalizeText(operator(this).find(LIST_STORE.DOM_ICON2).text()),
-          'icon3': normalizeText(operator(this).find(LIST_STORE.DOM_ICON3).text()),
-          'icon4': normalizeText(operator(this).find(LIST_STORE.DOM_ICON4).text()),
-          'icon5': normalizeText(operator(this).find(LIST_STORE.DOM_ICON5).text()),
-          'icon6': normalizeText(operator(this).find(LIST_STORE.DOM_ICON6).text()),
-          'icon7': normalizeText(operator(this).find(LIST_STORE.DOM_ICON7).text()),
-        });
-        const dateTimeRequest = (Date.now() - start)/1000;
+      let dataPage = {};
+      const dataImage = [];
+      operator(LIST_STORE.DOM_IMAGE).each(function(){
+        dataImage.push(operator(this).find('img').attr('data-src'));
+      });
+      dataPage = Object.assign({}, dataImage);
+      operator(LIST_STORE.DOM_TABLE).each(function(){
+        dataPage[operator(this).find('th').text()]= operator(this).find('td').text();
+      });
+      // winston.info(data);
+      dataPageWare.push(dataPage);
+      const dateTimeRequest = (Date.now() - start)/1000;
         winston.info({
           'Request' : i + 1,
           'Request time': dateTimeRequest,
-        });
       });
-      winston.info('dataPageWareTokyo');
+
+      winston.info('dataPageWare');
     }
-    return dataPageWareTokyo;
+    return dataPageWare;
   } catch (error) {
     winston.info(error);
   }

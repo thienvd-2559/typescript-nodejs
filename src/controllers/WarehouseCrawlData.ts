@@ -6,6 +6,7 @@ export default class WarehouseController {
       data: warehouse,
     });
   }
+
   public static async detailWarehouse(req: any, res: any, next: any) {
     const url = req.params.url;
     const detailWarehouse = await detailPageWarehouse(url);
@@ -13,6 +14,7 @@ export default class WarehouseController {
       data: detailWarehouse,
     });
   }
+
   public static async detailProvincial(req: any, res: any, next: any) {
     const detailProvincial = await detailPageProvincial();
     return res.json({
