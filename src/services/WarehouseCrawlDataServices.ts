@@ -11,7 +11,7 @@ async function warehouseCrawlData() {
     const page = await browser.newPage();
     await page.setRequestInterception(true);
 
-    winston.info('Redirecting to page.on(\'request\')');
+    winston.info("Redirecting to page.on('request')");
     await page.on('request', (req) => {
       const typeImageVideo = ['image', 'media'];
       const videoExtension = ['.mp4', '.avi', '.flv', '.mov', '.wmv'];
@@ -22,10 +22,7 @@ async function warehouseCrawlData() {
       const urlExtension = splitUrlByDot.length - 1;
       // show last string
       const videoTail = splitUrlByDot[urlExtension];
-      if (
-        videoExtension.includes(videoTail) === true ||
-        typeImageVideo.includes(resourceType) === true
-      ) {
+      if (videoExtension.includes(videoTail) === true || typeImageVideo.includes(resourceType) === true) {
         req.abort();
       } else {
         req.continue();
@@ -43,21 +40,17 @@ async function warehouseCrawlData() {
 
     return await page.evaluate(() => {
       const domain = [];
-      document
-        .querySelectorAll(
-          '#contents > div.topArea > div.section.areas > div > div >.group'
-        )
-        .forEach((e) => {
-          const City = [];
-          e.querySelectorAll('ul>li').forEach((el) => {
-            // @ts-ignore
-            City.push(el.innerText);
-          });
-          domain.push({
-            Domain: e.querySelector('p').innerHTML,
-            City,
-          });
+      document.querySelectorAll('#contents > div.topArea > div.section.areas > div > div >.group').forEach((e) => {
+        const City = [];
+        e.querySelectorAll('ul>li').forEach((el) => {
+          // @ts-ignore
+          City.push(el.innerText);
         });
+        domain.push({
+          Domain: e.querySelector('p').innerHTML,
+          City,
+        });
+      });
       return domain;
     });
   } catch (error) {
@@ -103,13 +96,11 @@ async function detailPageProvincial() {
     const symbol = cheerio.load(result);
     const dataWarehouse = [];
     symbol(LIST_PROVINCE.DOM_PROVINCE).each(function (e) {
-      dataWarehouse.push(
-        symbol(this).find(LIST_PROVINCE.DOM_WAREHOUSE).attr('href'),
-      );
+      dataWarehouse.push(symbol(this).find(LIST_PROVINCE.DOM_WAREHOUSE).attr('href'));
     });
     winston.info('dataWarehouse');
 
-    for(let i = 0; i < dataWarehouse.length; i++) {
+    for (let i = 0; i < dataWarehouse.length; i++) {
       const start = Date.now();
       const optionsTokyo = {
         method: 'GET',
@@ -121,19 +112,19 @@ async function detailPageProvincial() {
       const operator = cheerio.load(resultTokyo);
       let dataPage = {};
       const dataImage = [];
-      operator(LIST_STORE.DOM_IMAGE).each(function(){
+      operator(LIST_STORE.DOM_IMAGE).each(function () {
         dataImage.push(operator(this).find('img').attr('data-src'));
       });
       dataPage = Object.assign({}, dataImage);
-      operator(LIST_STORE.DOM_TABLE).each(function(){
-        dataPage[normalizeText(operator(this).find('th').text())]= normalizeText(operator(this).find('td').text());
+      operator(LIST_STORE.DOM_TABLE).each(function () {
+        dataPage[normalizeText(operator(this).find('th').text())] = normalizeText(operator(this).find('td').text());
       });
       // winston.info(data);
       dataPageWare.push(dataPage);
-      const dateTimeRequest = (Date.now() - start)/1000;
-        winston.info({
-          'Request' : i + 1,
-          'Request time': dateTimeRequest,
+      const dateTimeRequest = (Date.now() - start) / 1000;
+      winston.info({
+        Request: i + 1,
+        'Request time': dateTimeRequest,
       });
 
       winston.info('dataPageWare');

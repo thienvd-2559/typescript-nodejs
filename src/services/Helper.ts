@@ -1,5 +1,5 @@
 const normalizeText = (text) => {
-    return text.replace(/\\n/g, '').trim();
+  return text.replace(/\\n/g, '').trim();
 };
 
 export { normalizeText };
