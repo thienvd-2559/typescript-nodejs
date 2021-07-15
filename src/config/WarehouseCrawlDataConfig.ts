@@ -1,17 +1,17 @@
-const URL = 'https://www.cbre-propertysearch.jp/industrial/';
+const url = 'https://www.cbre-propertysearch.jp/industrial/';
 
-const LIST_PROVINCE = {
-  DOM_PROVINCE: '#contents > div > div.propertyList > div > div.itemGroup >.item',
-  DOM_WAREHOUSE: 'div.inner > div > div.body > div.head > h2 > a',
-  DOM_LOCATION: 'div.inner > div > div.body > div.info > div > table > tbody > tr:nth-child(1) > td',
-  DOM_TRAFFIC: 'div.inner > div > div.body > div.info > div > table > tbody > tr:nth-child(2) > td',
-  DOM_SCALE: 'div.inner > div > div.body > div.info > div > table > tbody > tr:nth-child(3) > td',
-  DOM_COMPLETION: 'div.inner > div > div.body > div.info > div > table > tbody > tr:nth-child(4) > td',
+const list_province = {
+  dom_province: '#contents > div > div.propertylist > div > div.itemgroup >.item',
+  dom_warehouse: 'div.inner > div > div.body > div.head > h2 > a',
+  dom_location: 'div.inner > div > div.body > div.info > div > table > tbody > tr:nth-child(1) > td',
+  dom_traffic: 'div.inner > div > div.body > div.info > div > table > tbody > tr:nth-child(2) > td',
+  dom_scale: 'div.inner > div > div.body > div.info > div > table > tbody > tr:nth-child(3) > td',
+  dom_completion: 'div.inner > div > div.body > div.info > div > table > tbody > tr:nth-child(4) > td',
 };
 
-const LIST_STORE = {
-  DOM_IMAGE: '#contents > div > div.columnSection.clearfix > div > div.imgSection > div > div.photo > div.inner > div > div',
-  DOM_TABLE: '#contents > div > div.columnSection.clearfix > div > div.bodySection > table > tbody > tr',
+const list_store = {
+  dom_image: '#contents > div > div.columnsection.clearfix > div > div.imgsection > div > div.photo > div.inner > div > div',
+  dom_table: '#contents > div > div.columnsection.clearfix > div > div.bodysection > table > tbody > tr',
 };
 
-export { URL, LIST_PROVINCE, LIST_STORE };
+export { url, list_province, list_store };

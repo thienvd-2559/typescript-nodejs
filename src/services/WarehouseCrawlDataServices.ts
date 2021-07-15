@@ -2,7 +2,7 @@ import puppeteer from 'puppeteer';
 import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
-import { URL, LIST_PROVINCE, LIST_STORE } from '../config/WarehouseCrawlDataConfig';
+import { url, list_province, list_store } from '../config/WarehouseCrawlDataConfig';
 import { normalizeText } from './Helper';
 
 async function warehouseCrawlData() {
@@ -68,13 +68,13 @@ async function detailPageWarehouse(url) {
     winston.info('result');
     const symbol = cheerio.load(result);
     const dataWarehouse = [];
-    symbol(LIST_PROVINCE.DOM_PROVINCE).each(function (e) {
+    symbol(list_province.dom_province).each(function (e) {
       dataWarehouse.push({
-        Name: symbol(this).find(LIST_PROVINCE.DOM_WAREHOUSE).text(),
-        Location: symbol(this).find(LIST_PROVINCE.DOM_LOCATION).text(),
-        Traffic: symbol(this).find(LIST_PROVINCE.DOM_TRAFFIC).text(),
-        Scale: symbol(this).find(LIST_PROVINCE.DOM_SCALE).text(),
-        Completion: symbol(this).find(LIST_PROVINCE.DOM_COMPLETION).text(),
+        name: symbol(this).find(list_province.dom_warehouse).text(),
+        location: symbol(this).find(list_province.dom_location).text(),
+        traffic: symbol(this).find(list_province.dom_traffic).text(),
+        scale: symbol(this).find(list_province.dom_scale).text(),
+        completion: symbol(this).find(list_province.dom_completion).text(),
       });
     });
 
@@ -95,8 +95,8 @@ async function detailPageProvincial() {
     winston.info('result');
     const symbol = cheerio.load(result);
     const dataWarehouse = [];
-    symbol(LIST_PROVINCE.DOM_PROVINCE).each(function (e) {
-      dataWarehouse.push(symbol(this).find(LIST_PROVINCE.DOM_WAREHOUSE).attr('href'));
+    symbol(list_province.dom_province).each(function (e) {
+      dataWarehouse.push(symbol(this).find(list_province.dom_warehouse).attr('href'));
     });
     winston.info('dataWarehouse');
 
@@ -112,11 +112,11 @@ async function detailPageProvincial() {
       const operator = cheerio.load(resultTokyo);
       let dataPage = {};
       const dataImage = [];
-      operator(LIST_STORE.DOM_IMAGE).each(function () {
+      operator(list_store.dom_image).each(function () {
         dataImage.push(operator(this).find('img').attr('data-src'));
       });
       dataPage = Object.assign({}, dataImage);
-      operator(LIST_STORE.DOM_TABLE).each(function () {
+      operator(list_store.dom_table).each(function () {
         dataPage[normalizeText(operator(this).find('th').text())] = normalizeText(operator(this).find('td').text());
       });
       // winston.info(data);
