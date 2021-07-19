@@ -41,9 +41,9 @@ function firstElement<Type>(arr: any[][number]): number {
 }
 
 function printCoord<Type>(pt: Coordinate, direction: Direction): Coordinate {
-  winston.info("The coordinate's x value is " + pt.x);
-  winston.info("The coordinate's y value is " + pt.y);
-  winston.info("The coordinate's Z value is " + pt.z?.toUpperCase());
+  winston.info('The coordinate\'s x value is ' + pt.x);
+  winston.info('The coordinate\'s y value is ' + pt.y);
+  winston.info('The coordinate\'s Z value is ' + pt.z?.toUpperCase());
   winston.info('The direction is ' + direction);
 
   return pt;

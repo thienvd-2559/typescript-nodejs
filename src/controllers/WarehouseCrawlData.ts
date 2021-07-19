@@ -1,4 +1,5 @@
 import { warehouseCrawlData, detailPageWarehouse, detailPageProvince } from '../services/WarehouseCrawlDataServices';
+
 export default class WarehouseController {
   public static async warehouse(req, res, next): Promise<any> {
     const warehouse = await warehouseCrawlData();

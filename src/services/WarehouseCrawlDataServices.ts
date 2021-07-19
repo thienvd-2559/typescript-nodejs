@@ -2,7 +2,7 @@ import puppeteer from 'puppeteer';
 import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
-import { urlProvince, listProvince, listStore } from '../config/WarehouseCrawlDataConfig';
+import { URL_PROVINCES, LIST_PROVINCES, LIST_STORES } from '../config/WarehouseCrawlDataConfigs';
 import { normalizeText } from '../utils/string';
 
 async function warehouseCrawlData() {
@@ -15,9 +15,9 @@ async function warehouseCrawlData() {
     await page.on('request', (req) => {
       const typeImageVideo = ['image', 'media'];
       const videoExtension = ['.mp4', '.avi', '.flv', '.mov', '.wmv'];
-      const url = req.url().toLowerCase();
+      const pathImageVideo = req.url().toLowerCase();
       const resourceType = req.resourceType();
-      const splitUrlByDot = url.split('.');
+      const splitUrlByDot = pathImageVideo.split('.');
       // total '.' appear in a string
       const urlExtension = splitUrlByDot.length - 1;
       // show last string
@@ -29,8 +29,8 @@ async function warehouseCrawlData() {
       }
     });
 
-    winston.info(`Redirecting to [${urlProvince}]`);
-    await page.goto(`${urlProvince}`, {
+    winston.info(`Redirecting to [${URL_PROVINCES}]`);
+    await page.goto(`${URL_PROVINCES}`, {
       waitUntil: 'load',
       timeout: 30000,
     });
@@ -41,14 +41,14 @@ async function warehouseCrawlData() {
     return await page.evaluate(() => {
       const domain = [];
       document.querySelectorAll('#contents > div.topArea > div.section.areas > div > div >.group').forEach((e) => {
-        const City = [];
+        const city = [];
         e.querySelectorAll('ul > li').forEach((el) => {
           // @ts-ignore
-          City.push(el.innerText);
+          city.push(el.innerText);
         });
         domain.push({
-          Domain: e.querySelector('p').innerHTML,
-          City,
+          domain: e.querySelector('p').innerHTML,
+          city,
         });
       });
       return domain;
@@ -62,19 +62,19 @@ async function detailPageWarehouse(url) {
   try {
     const options = {
       method: 'GET',
-      uri: `${urlProvince}${url}`,
+      uri: `${URL_PROVINCES}/${url}`,
     };
     winston.info(options.uri);
     const result = await request_promise(options);
     winston.info('result');
     const symbol = cheerio.load(result);
     const dataWarehouse = [];
-    symbol(listProvince.dom_item_city).each(function () {
+    symbol(LIST_PROVINCES.dom_item_city).each(function () {
       const dataPageData = {};
       // tslint:disable-next-line: no-string-literal
-      dataPageData['城舗'] = symbol(this).find(listProvince.dom_city).text();
+      dataPageData['city'] = symbol(this).find(LIST_PROVINCES.dom_city).text();
       symbol(this)
-        .find(listProvince.dom_other_information)
+        .find(LIST_PROVINCES.dom_other_information)
         .each(function () {
           dataPageData[symbol(this).find('th').text()] = symbol(this).find('td').text();
         });
@@ -91,14 +91,14 @@ async function detailPageProvince() {
     const dataPageWare = [];
     const options = {
       method: 'GET',
-      uri: `${urlProvince}tokyo/`,
+      uri: `${URL_PROVINCES}/tokyo`,
     };
     const result = await request_promise(options);
     winston.info('result');
     const symbol = cheerio.load(result);
     const dataWarehouse = [];
-    symbol(listProvince.dom_province).each(function (e) {
-      dataWarehouse.push(symbol(this).find(listProvince.dom_warehouse).attr('href'));
+    symbol(LIST_PROVINCES.dom_province).each(function (e) {
+      dataWarehouse.push(symbol(this).find(LIST_PROVINCES.dom_warehouse).attr('href'));
     });
     winston.info('dataWarehouse');
 
@@ -114,14 +114,13 @@ async function detailPageProvince() {
       const operator = cheerio.load(resultTokyo);
       let dataPage = {};
       const dataImage = [];
-      operator(listStore.dom_image).each(function () {
+      operator(LIST_STORES.dom_image).each(function () {
         dataImage.push(operator(this).find('img').attr('data-src'));
       });
       dataPage = Object.assign({}, dataImage);
-      operator(listStore.dom_table).each(function () {
+      operator(LIST_STORES.dom_table).each(function () {
         dataPage[normalizeText(operator(this).find('th').text())] = normalizeText(operator(this).find('td').text());
       });
-      // winston.info(data);
       dataPageWare.push(dataPage);
       const dateTimeRequest = (Date.now() - start) / 1000;
       winston.info({
