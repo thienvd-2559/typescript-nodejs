@@ -1,4 +1,4 @@
-import { warehouseCrawlData, detailPageWarehouse, detailPageProvincial } from '../services/WarehouseCrawlDataServices';
+import { warehouseCrawlData, detailPageWarehouse, detailPageProvince } from '../services/WarehouseCrawlDataServices';
 export default class WarehouseController {
   public static async warehouse(req, res, next): Promise<any> {
     const warehouse = await warehouseCrawlData();
@@ -15,10 +15,10 @@ export default class WarehouseController {
     });
   }
 
-  public static async detailProvincial(req: any, res: any, next: any) {
-    const detailProvincial = await detailPageProvincial();
+  public static async detailProvince(req: any, res: any, next: any) {
+    const detailProvince = await detailPageProvince();
     return res.json({
-      data: detailProvincial,
+      data: detailProvince,
     });
   }
 }
