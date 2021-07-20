@@ -70,13 +70,18 @@ async function detailPageWarehouse(url) {
     const symbol = cheerio.load(result);
     const dataWarehouse = [];
     symbol(LIST_PROVINCES.dom_item_city).each(function () {
-      const dataPageData = {};
-      // tslint:disable-next-line: no-string-literal
-      dataPageData['city'] = symbol(this).find(LIST_PROVINCES.dom_city).text();
+      const dataPageData = [];
+      dataPageData.push({
+        key: 'city',
+        value: symbol(this).find(LIST_PROVINCES.dom_city).text(),
+      });
       symbol(this)
         .find(LIST_PROVINCES.dom_other_information)
         .each(function () {
-          dataPageData[symbol(this).find('th').text()] = symbol(this).find('td').text();
+          dataPageData.push({
+            key: symbol(this).find('th').text(),
+            value: symbol(this).find('td').text(),
+          });
         });
       dataWarehouse.push(dataPageData);
     });
@@ -104,22 +109,31 @@ async function detailPageProvince() {
 
     for (let i = 0; i < dataWarehouse.length; i++) {
       const start = Date.now();
-      const optionsTokyo = {
+      const optionsProvince = {
         method: 'GET',
         uri: `https://www.cbre-propertysearch.jp${dataWarehouse[i]}`,
       };
       winston.info('optionsTokyo');
-      const resultTokyo = await request_promise(optionsTokyo);
+      const resultTokyo = await request_promise(optionsProvince);
       winston.info('resultTokyo');
       const operator = cheerio.load(resultTokyo);
-      let dataPage = {};
+      const dataPage = [];
       const dataImage = [];
       operator(LIST_STORES.dom_image).each(function () {
         dataImage.push(operator(this).find('img').attr('data-src'));
       });
-      dataPage = Object.assign({}, dataImage);
+      // tslint:disable-next-line: prefer-for-of
+      for (let t = 0; t < dataImage.length; t++) {
+        dataPage.push({
+          key: `image[${t}]`,
+          value: dataImage[t],
+        });
+      }
       operator(LIST_STORES.dom_table).each(function () {
-        dataPage[normalizeText(operator(this).find('th').text())] = normalizeText(operator(this).find('td').text());
+        dataPage.push({
+          key: normalizeText(operator(this).find('th').text()),
+          value: operator(this).find('td').text(),
+        });
       });
       dataPageWare.push(dataPage);
       const dateTimeRequest = (Date.now() - start) / 1000;
@@ -127,7 +141,6 @@ async function detailPageProvince() {
         Request: i + 1,
         'Request time': dateTimeRequest,
       });
-
       winston.info('dataPageWare');
     }
     return dataPageWare;

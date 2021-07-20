@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/d10cn2btt/typescript-nodejs#readme",
   "dependencies": {
+    "@google-cloud/translate": "^6.2.5",
     "@types/random-useragent": "^0.3.0",
     "@types/request-promise": "^4.1.47",
     "cheerio": "^1.0.0-rc.10",
@@ -39,6 +40,10 @@
     "random-useragent": "^0.5.0",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
+    "transfer": "^1.0.7",
+    "translate": "^1.2.3",
+    "translate-google": "^1.4.3",
+    "translatte": "^3.0.1",
     "tslint-config-prettier": "^1.18.0",
     "winston": "^3.3.3"
   },
