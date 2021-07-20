@@ -2,7 +2,7 @@ import puppeteer from 'puppeteer';
 import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
-import { URL_PROVINCES, LIST_PROVINCES, LIST_STORES } from '../config/WarehouseCrawlDataConfigs';
+import { URL_PROVINCES, LIST_PROVINCES, LIST_STORES } from '../config/WarehouseCrawlDataConfig';
 import { normalizeText } from '../utils/string';
 
 async function warehouseCrawlData() {
@@ -114,9 +114,9 @@ async function detailPageProvince() {
         uri: `https://www.cbre-propertysearch.jp${dataWarehouse[i]}`,
       };
       winston.info('optionsTokyo');
-      const resultTokyo = await request_promise(optionsProvince);
+      const resultProvince = await request_promise(optionsProvince);
       winston.info('resultTokyo');
-      const operator = cheerio.load(resultTokyo);
+      const operator = cheerio.load(resultProvince);
       const dataPage = [];
       const dataImage = [];
       operator(LIST_STORES.dom_image).each(function () {

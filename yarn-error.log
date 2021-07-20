@@ -2,7 +2,7 @@ Arguments:
   /usr/local/bin/node /usr/share/yarn/bin/yarn.js lint
 
 PATH: 
-  /home/adminpc/Desktop/typescript-nodejs/node_modules/.bin:/tmp/yarn--1626694374686-0.8213500404437117:/home/adminpc/Desktop/typescript-nodejs/node_modules/.bin:/home/adminpc/.config/yarn/link/node_modules/.bin:/home/adminpc/.yarn/bin:/usr/local/libexec/lib/node_modules/npm/bin/node-gyp-bin:/usr/local/lib/node_modules/npm/bin/node-gyp-bin:/usr/local/bin/node_modules/npm/bin/node-gyp-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+  /home/adminpc/Desktop/typescript-nodejs/node_modules/.bin:/tmp/yarn--1626692190812-0.42674430287707676:/home/adminpc/Desktop/typescript-nodejs/node_modules/.bin:/home/adminpc/.config/yarn/link/node_modules/.bin:/home/adminpc/.yarn/bin:/usr/local/libexec/lib/node_modules/npm/bin/node-gyp-bin:/usr/local/lib/node_modules/npm/bin/node-gyp-bin:/usr/local/bin/node_modules/npm/bin/node-gyp-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
 
 Yarn version: 
   1.22.5
