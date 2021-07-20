@@ -69,14 +69,14 @@ async function detailPageWarehouse(url) {
     winston.info('result');
     const symbol = cheerio.load(result);
     const dataWarehouse = [];
-    symbol(LIST_PROVINCES.dom_item_city).each(function () {
+    symbol(LIST_PROVINCES.DOM_ITEM_CITY).each(function () {
       const dataPageData = [];
       dataPageData.push({
         key: 'city',
-        value: symbol(this).find(LIST_PROVINCES.dom_city).text(),
+        value: symbol(this).find(LIST_PROVINCES.DOM_CITY).text(),
       });
       symbol(this)
-        .find(LIST_PROVINCES.dom_other_information)
+        .find(LIST_PROVINCES.DOM_OTHER_INFORMATION)
         .each(function () {
           dataPageData.push({
             key: symbol(this).find('th').text(),
@@ -102,8 +102,8 @@ async function detailPageProvince() {
     winston.info('result');
     const symbol = cheerio.load(result);
     const dataWarehouse = [];
-    symbol(LIST_PROVINCES.dom_province).each(function (e) {
-      dataWarehouse.push(symbol(this).find(LIST_PROVINCES.dom_warehouse).attr('href'));
+    symbol(LIST_PROVINCES.DOM_PROVINCE).each(function (e) {
+      dataWarehouse.push(symbol(this).find(LIST_PROVINCES.DOM_WAREHOUSE).attr('href').substring(1));
     });
     winston.info('dataWarehouse');
 
@@ -111,15 +111,15 @@ async function detailPageProvince() {
       const start = Date.now();
       const optionsProvince = {
         method: 'GET',
-        uri: `https://www.cbre-propertysearch.jp${dataWarehouse[i]}`,
+        uri: `https://www.cbre-propertysearch.jp/${dataWarehouse[i]}`,
       };
-      winston.info('optionsTokyo');
+      winston.info('optionsProvince');
       const resultProvince = await request_promise(optionsProvince);
-      winston.info('resultTokyo');
+      winston.info('resultProvince');
       const operator = cheerio.load(resultProvince);
       const dataPage = [];
       const dataImage = [];
-      operator(LIST_STORES.dom_image).each(function () {
+      operator(LIST_STORES.DOM_IMAGE).each(function () {
         dataImage.push(operator(this).find('img').attr('data-src'));
       });
       // tslint:disable-next-line: prefer-for-of
@@ -129,7 +129,7 @@ async function detailPageProvince() {
           value: dataImage[t],
         });
       }
-      operator(LIST_STORES.dom_table).each(function () {
+      operator(LIST_STORES.DOM_TABLE).each(function () {
         dataPage.push({
           key: normalizeText(operator(this).find('th').text()),
           value: operator(this).find('td').text(),
