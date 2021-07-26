@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import CrawlController from '../controllers/CrawlDemo';
 import WarehouseController from '../controllers/WarehouseCrawlData';
+import CrawlPageProvinceController from '../controllers/CrawlPageProvince';
 
 const router = Router();
 
@@ -12,5 +13,8 @@ router.get('/crawl-list-page', CrawlController.crawlListPage);
 router.get('/warehouse-crawl-data', WarehouseController.warehouse);
 router.get('/warehouse-detail-page/:url', WarehouseController.detailWarehouse);
 router.get('/warehouse-crawl-detail-page-province', WarehouseController.detailProvince);
+
+// crawl page province
+router.get('/crawl-detail-page-province', CrawlPageProvinceController.crawlPageProvince);
 
 export default router;
