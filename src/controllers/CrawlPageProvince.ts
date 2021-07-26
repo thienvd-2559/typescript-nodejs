@@ -2,9 +2,9 @@ import { crawlLinkCity, crawlPathWareHouse, detailPageWarehouse } from '../servi
 
 export default class CrawlPageProvinceController {
   public static async crawlPageProvince(req, res, next): Promise<any> {
-    const linkCity = await detailPageWarehouse();
+    const detailWarehouse = await detailPageWarehouse();
     return res.json({
-      data: linkCity,
+      data: detailWarehouse,
     });
   }
 }
