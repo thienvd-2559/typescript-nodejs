@@ -1,7 +1,7 @@
 import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
-import { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_STORES } from '../config/WarehouseCrawlDataConfig';
+import { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WARE_HOUSE, LIST_DETAILS_WARE_HOUSE } from '../config/WarehouseCrawlDataConfig';
 import { normalizeText } from '../utils/string';
 import fs from 'fs';
 // tslint:disable-next-line: no-var-requires
@@ -16,9 +16,9 @@ async function crawlLinkCity() {
     const result = await request_promise(options);
     const operator = cheerio.load(result);
     const dataWarehouse = [];
-    operator(LIST_PROVINCES.DOM_LAYOUT_PROVINCES).each(function () {
+    operator(LIST_PROVINCES.DOM_LAYOUT_PROVINCE).each(function () {
       operator(this)
-        .find(LIST_PROVINCES.DOM_URL_PROVINCES)
+        .find(LIST_PROVINCES.DOM_URL_PROVINCE)
         .each(function () {
           const dataHref = operator(this).find('a').attr('href');
           if (dataHref) {
@@ -28,7 +28,7 @@ async function crawlLinkCity() {
           }
         });
     });
-    winston.info('[crawl success data url city]');
+    winston.info('[crawl success data url provinces]');
     return dataWarehouse;
   } catch (err) {
     winston.info(err);
@@ -36,7 +36,7 @@ async function crawlLinkCity() {
 }
 
 async function crawlPathWareHouse() {
-  const data = [];
+  const dataCrawlPathWareHouse = [];
   const linksCity = await crawlLinkCity();
   for (const i of linksCity) {
     try {
@@ -46,7 +46,7 @@ async function crawlPathWareHouse() {
       };
       const result = await request_promise(options);
       const operator = cheerio.load(result);
-      const totalPaging = operator(LIST_STORES.DOM_TOTAL_PAGING).text();
+      const totalPaging = operator(LIST_WARE_HOUSE.DOM_TOTAL_PAGING).text();
       let countPaging = 1;
       if (totalPaging === '') {
         countPaging = 1;
@@ -64,13 +64,13 @@ async function crawlPathWareHouse() {
         winston.info(optionsPaging.uri);
         const resultPaging = await request_promise(optionsPaging);
         const operatorPaging = cheerio.load(resultPaging);
-        operatorPaging(LIST_STORES.DOM_URL_WARE_HOUSE_).each(function () {
-          data.push({
+        operatorPaging(LIST_WARE_HOUSE.DOM_URL_WARE_HOUSE_).each(function () {
+          dataCrawlPathWareHouse.push({
             url: `${URL_HOME_PAGE}${operatorPaging(this).find('a').attr('href')}`,
             status: 0,
           });
         });
-        fs.writeFile('pathDetailsWareHouse.json', JSON.stringify(data), (err) => {
+        fs.writeFile('pathDetailsWareHouse.json', JSON.stringify(dataCrawlPathWareHouse), (err) => {
           if (err) throw err;
           winston.info(`save url ${optionsPaging.uri} done !`);
         });
@@ -80,14 +80,14 @@ async function crawlPathWareHouse() {
     }
   }
   winston.info('[crawl success data url ware house]');
-  return data;
+  return dataCrawlPathWareHouse;
 }
 
 async function detailPageWarehouse() {
   try {
     // Check if the file exists or not
-    const path = 'pathDetailsWareHouse.json';
-    if (!fs.existsSync(path)) {
+    const filePathDetailsWareHouse = 'pathDetailsWareHouse.json';
+    if (!fs.existsSync(filePathDetailsWareHouse)) {
       // Create file;
       fs.writeFile('pathDetailsWareHouse.json', '', (err) => {
         if (err) throw err;
@@ -137,10 +137,9 @@ async function detailPageWarehouse() {
         const resultProvince = await request_promise(optionsProvince);
         const operator = cheerio.load(resultProvince);
         const dataImage = [];
-        operator(LIST_STORES.DOM_IMAGE).each(function () {
+        operator(LIST_DETAILS_WARE_HOUSE.DOM_IMAGE).each(function () {
           dataImage.push(operator(this).find('img').attr('data-src'));
         });
-        // tslint:disable-next-line: prefer-for-of
         for (let t = 0; t < dataImage.length; t++) {
           if (dataImage[t]) {
             dataPage.push({
@@ -150,7 +149,7 @@ async function detailPageWarehouse() {
           }
         }
 
-        operator(LIST_STORES.DOM_TABLE).each(function () {
+        operator(LIST_DETAILS_WARE_HOUSE.DOM_TABLE).each(function () {
           dataPage.push({
             key: normalizeText(operator(this).find('th').text()),
             value: normalizeText(operator(this).find('td').text()),
