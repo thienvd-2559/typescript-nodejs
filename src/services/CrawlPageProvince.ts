@@ -13,17 +13,14 @@ async function crawlLinkCity() {
       method: 'GET',
       uri: `${URL_PROVINCES}`,
     };
-    // winston.info(options.uri);
     const result = await request_promise(options);
-    // winston.info('result');
-    const symbol = cheerio.load(result);
+    const operator = cheerio.load(result);
     const dataWarehouse = [];
-    symbol(LIST_PROVINCES.DOM_LAYOUT_PROVINCES).each(function () {
-      symbol(this)
+    operator(LIST_PROVINCES.DOM_LAYOUT_PROVINCES).each(function () {
+      operator(this)
         .find(LIST_PROVINCES.DOM_URL_PROVINCES)
         .each(function () {
-          const dataHref = symbol(this).find('a').attr('href');
-          // winston.info(dataHref);
+          const dataHref = operator(this).find('a').attr('href');
           if (dataHref) {
             dataWarehouse.push({
               pathWareHouse: `${URL_HOME_PAGE}${dataHref}`,
@@ -41,18 +38,15 @@ async function crawlLinkCity() {
 async function crawlPathWareHouse() {
   const data = [];
   const linksCity = await crawlLinkCity();
-  // winston.info(linksCity);
   for (const i of linksCity) {
     try {
       const options = {
         method: 'GET',
         uri: i.pathWareHouse,
       };
-      // winston.info(options.uri);
       const result = await request_promise(options);
-      // winston.info(result);
-      const symbol = cheerio.load(result);
-      const totalPaging = symbol(LIST_STORES.DOM_TOTAL_PAGING).text();
+      const operator = cheerio.load(result);
+      const totalPaging = operator(LIST_STORES.DOM_TOTAL_PAGING).text();
       let countPaging = 1;
       if (totalPaging === '') {
         countPaging = 1;
@@ -69,17 +63,16 @@ async function crawlPathWareHouse() {
         };
         winston.info(optionsPaging.uri);
         const resultPaging = await request_promise(optionsPaging);
-        const symbolPaging = cheerio.load(resultPaging);
-        symbolPaging(LIST_STORES.DOM_URL_WARE_HOUSE_).each(function () {
+        const operatorPaging = cheerio.load(resultPaging);
+        operatorPaging(LIST_STORES.DOM_URL_WARE_HOUSE_).each(function () {
           data.push({
-            url: `${URL_HOME_PAGE}${symbolPaging(this).find('a').attr('href')}`,
+            url: `${URL_HOME_PAGE}${operatorPaging(this).find('a').attr('href')}`,
             status: 0,
           });
         });
-        // winston.info('dataPage');
         fs.writeFile('pathDetailsWareHouse.json', JSON.stringify(data), (err) => {
           if (err) throw err;
-          winston.info('done !');
+          winston.info(`save url ${optionsPaging.uri} done !`);
         });
       }
     } catch (error) {
@@ -110,7 +103,6 @@ async function detailPageWarehouse() {
     } else {
       dataPathWareHouse = JSON.parse(dataPathWareHouse);
     }
-
     winston.info(dataPathWareHouse);
 
     // Check file json, if status = 0 => crawl data warehouse details with status = 0 -> save data 1 file and change status = 0->1
@@ -125,26 +117,24 @@ async function detailPageWarehouse() {
     }
 
     // read file data.json . If data file fileJson = data file data.json, else fileJson = []
-    let fileJson = [];
+    let dataOutput = [];
     const dataTest = await fsPromises.readFile('data.json', 'utf8');
     if (Object.keys(dataTest).length === 0 || dataTest.constructor === Object) {
-      fileJson = [];
+      dataOutput = [];
     } else {
-      fileJson = JSON.parse(dataTest);
+      dataOutput = JSON.parse(dataTest);
     }
 
     for (const dataPath of dataPathWareHouse) {
+      const start = Date.now();
       const dataPage = [];
-      // winston.info(dataPath);
       if (dataPath.status === 0) {
         const optionsProvince = {
           method: 'GET',
           uri: dataPath.url,
         };
-        winston.info('optionsProvince');
         winston.info(dataPath.url);
         const resultProvince = await request_promise(optionsProvince);
-        winston.info('resultProvince');
         const operator = cheerio.load(resultProvince);
         const dataImage = [];
         operator(LIST_STORES.DOM_IMAGE).each(function () {
@@ -152,10 +142,12 @@ async function detailPageWarehouse() {
         });
         // tslint:disable-next-line: prefer-for-of
         for (let t = 0; t < dataImage.length; t++) {
-          dataPage.push({
-            key: `image[${t}]`,
-            value: dataImage[t],
-          });
+          if (dataImage[t]) {
+            dataPage.push({
+              key: `image[${t}]`,
+              value: dataImage[t],
+            });
+          }
         }
 
         operator(LIST_STORES.DOM_TABLE).each(function () {
@@ -166,22 +158,24 @@ async function detailPageWarehouse() {
         });
         dataPath.status = 1;
         winston.info(dataPage);
-        fileJson.push(dataPage);
+        dataOutput.push(dataPage);
       }
-      fs.writeFile('data.json', JSON.stringify(fileJson), (err) => {
+      fs.writeFile('data.json', JSON.stringify(dataOutput), (err) => {
         if (err) throw err;
-        winston.info('done !');
+        winston.info('save data detail ware house done !');
       });
-
-      // fs.appendFileSync('data.json', JSON.stringify(fileJson));
-
       fs.writeFile('pathDetailsWareHouse.json', JSON.stringify(dataPathWareHouse), (err) => {
         if (err) throw err;
-        winston.info('done !');
+        winston.info('update status = 1 done !');
       });
+      const dateTimeRequest = (Date.now() - start) / 1000;
+      winston.info({
+        'Request time': dateTimeRequest,
+      });
+      winston.info('dataPageWare');
     }
     winston.info('[crawl success data details ware house]');
-    return fileJson;
+    return dataOutput;
   } catch (error) {
     winston.info(error);
   }
