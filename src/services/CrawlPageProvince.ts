@@ -36,8 +36,8 @@ async function crawlLinkProvinces() {
 
 async function crawlPathWareHouse() {
   const dataCrawlPathWareHouse = [];
-  const linksCity = await crawlLinkProvinces();
-  for (const i of linksCity) {
+  const linksProvinces = await crawlLinkProvinces();
+  for (const i of linksProvinces) {
     try {
       const options = {
         method: 'GET',
@@ -112,7 +112,7 @@ async function detailPageWarehouse() {
       });
     }
 
-    // read file data.json . If data file fileJson = data file data.json, else fileJson = []
+    // read file data.json . If data file dataOutput = data file data.json, else dataOutput = []
     let dataOutput = [];
     const dataTest = await readFile('data.json', 'utf8');
     if (Object.keys(dataTest).length === 0 || dataTest.constructor === Object) {
