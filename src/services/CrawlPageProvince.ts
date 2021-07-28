@@ -4,10 +4,9 @@ import cheerio from 'cheerio';
 import { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WARE_HOUSE, LIST_DETAILS_WARE_HOUSE } from '../config/WarehouseCrawlDataConfig';
 import { normalizeText } from '../utils/string';
 import fs from 'fs';
-// tslint:disable-next-line: no-var-requires
-const fsPromises = require('fs').promises;
+import { readFile } from 'fs/promises';
 
-async function crawlLinkCity() {
+async function crawlLinkProvinces() {
   try {
     const options = {
       method: 'GET',
@@ -37,7 +36,7 @@ async function crawlLinkCity() {
 
 async function crawlPathWareHouse() {
   const dataCrawlPathWareHouse = [];
-  const linksCity = await crawlLinkCity();
+  const linksCity = await crawlLinkProvinces();
   for (const i of linksCity) {
     try {
       const options = {
@@ -51,8 +50,7 @@ async function crawlPathWareHouse() {
       if (totalPaging === '') {
         countPaging = 1;
       } else {
-        // tslint:disable-next-line: radix
-        countPaging = parseInt(totalPaging);
+        countPaging = Number(totalPaging);
       }
       winston.info(countPaging);
 
@@ -95,7 +93,7 @@ async function detailPageWarehouse() {
     }
 
     // Read file json
-    let dataPathWareHouse = await fsPromises.readFile('pathDetailsWareHouse.json', 'utf8');
+    let dataPathWareHouse: any = await readFile('pathDetailsWareHouse.json', 'utf8');
 
     // Check if the json file has data, if it is not possible to crawl data first.
     if (Object.keys(dataPathWareHouse).length === 0 || dataPathWareHouse.constructor === Object) {
@@ -103,10 +101,8 @@ async function detailPageWarehouse() {
     } else {
       dataPathWareHouse = JSON.parse(dataPathWareHouse);
     }
-    winston.info(dataPathWareHouse);
 
     // Check file json, if status = 0 => crawl data warehouse details with status = 0 -> save data 1 file and change status = 0->1
-
     // Check if the file exists or not
     const pathDetailsWareHouse = 'data.json';
     if (!fs.existsSync(pathDetailsWareHouse)) {
@@ -118,7 +114,7 @@ async function detailPageWarehouse() {
 
     // read file data.json . If data file fileJson = data file data.json, else fileJson = []
     let dataOutput = [];
-    const dataTest = await fsPromises.readFile('data.json', 'utf8');
+    const dataTest = await readFile('data.json', 'utf8');
     if (Object.keys(dataTest).length === 0 || dataTest.constructor === Object) {
       dataOutput = [];
     } else {
@@ -133,7 +129,6 @@ async function detailPageWarehouse() {
           method: 'GET',
           uri: dataPath.url,
         };
-        winston.info(dataPath.url);
         const resultProvince = await request_promise(optionsProvince);
         const operator = cheerio.load(resultProvince);
         const dataImage = [];
@@ -158,20 +153,21 @@ async function detailPageWarehouse() {
         dataPath.status = 1;
         winston.info(dataPage);
         dataOutput.push(dataPage);
+
+        fs.writeFile('data.json', JSON.stringify(dataOutput), (err) => {
+          if (err) throw err;
+          winston.info('save data detail ware house done !');
+        });
+        fs.writeFile('pathDetailsWareHouse.json', JSON.stringify(dataPathWareHouse), (err) => {
+          if (err) throw err;
+          winston.info('update status = 1 done !');
+        });
+        const dateTimeRequest = (Date.now() - start) / 1000;
+        winston.info({
+          'Request time': dateTimeRequest,
+        });
+        winston.info('dataPageWare');
       }
-      fs.writeFile('data.json', JSON.stringify(dataOutput), (err) => {
-        if (err) throw err;
-        winston.info('save data detail ware house done !');
-      });
-      fs.writeFile('pathDetailsWareHouse.json', JSON.stringify(dataPathWareHouse), (err) => {
-        if (err) throw err;
-        winston.info('update status = 1 done !');
-      });
-      const dateTimeRequest = (Date.now() - start) / 1000;
-      winston.info({
-        'Request time': dateTimeRequest,
-      });
-      winston.info('dataPageWare');
     }
     winston.info('[crawl success data details ware house]');
     return dataOutput;
@@ -180,4 +176,4 @@ async function detailPageWarehouse() {
   }
 }
 
-export { crawlLinkCity, crawlPathWareHouse, detailPageWarehouse };
+export { crawlLinkProvinces, crawlPathWareHouse, detailPageWarehouse };
