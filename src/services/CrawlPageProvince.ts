@@ -1,7 +1,7 @@
 import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
-import { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, LIST_DETAILS_WAREHOUSES } from '../config/WarehouseCrawlDataConfig';
+import { URL_HOME_PAGES, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, LIST_DETAILS_WAREHOUSES } from '../config/WarehouseCrawlDataConfig';
 import { normalizeText } from '../utils/string';
 import fs from 'fs';
 import { readFile } from 'fs/promises';
@@ -18,14 +18,14 @@ async function crawlLinkProvinces() {
     const result = await request_promise(options);
     const operator = cheerio.load(result);
     const dataWarehouse = [];
-    operator(LIST_PROVINCES.DOM_LAYOUT_PROVINCE).each(function () {
+    operator(LIST_PROVINCES.DOM_LAYOUT_PROVINCES).each(function () {
       operator(this)
-        .find(LIST_PROVINCES.DOM_URL_PROVINCE)
+        .find(LIST_PROVINCES.DOM_URL_PROVINCES)
         .each(function () {
           const dataHref = operator(this).find('a').attr('href');
           if (dataHref) {
             dataWarehouse.push({
-              pathWareHouse: `${URL_HOME_PAGE}${dataHref}`,
+              pathWareHouse: `${URL_HOME_PAGES}${dataHref}`,
             });
           }
         });
@@ -67,7 +67,7 @@ async function crawlPathWareHouse() {
         const operatorPaging = cheerio.load(resultPaging);
         operatorPaging(LIST_WAREHOUSES.DOM_URL_WAREHOUSES).each(function () {
           dataCrawlPathWareHouse.push({
-            url: `${URL_HOME_PAGE}${operatorPaging(this).find('a').attr('href')}`,
+            url: `${URL_HOME_PAGES}${operatorPaging(this).find('a').attr('href')}`,
             status: 0,
           });
         });
@@ -134,7 +134,7 @@ async function detailPageWarehouse() {
         const resultProvince = await request_promise(optionsProvince);
         const operator = cheerio.load(resultProvince);
         const dataImage = [];
-        operator(LIST_DETAILS_WAREHOUSES.DOM_IMAGE).each(function () {
+        operator(LIST_DETAILS_WAREHOUSES.DOM_IMAGES).each(function () {
           dataImage.push(operator(this).find('img').attr('data-src'));
         });
         for (let t = 0; t < dataImage.length; t++) {
@@ -146,7 +146,7 @@ async function detailPageWarehouse() {
           }
         }
 
-        operator(LIST_DETAILS_WAREHOUSES.DOM_TABLE).each(function () {
+        operator(LIST_DETAILS_WAREHOUSES.DOM_TABLES).each(function () {
           dataPage.push({
             key: normalizeText(operator(this).find('th').text()),
             value: normalizeText(operator(this).find('td').text()),

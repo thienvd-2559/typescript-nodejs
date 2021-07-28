@@ -119,7 +119,7 @@ async function detailPageProvince() {
       const operator = cheerio.load(resultProvince);
       const dataPage = [];
       const dataImage = [];
-      operator(LIST_DETAILS_WAREHOUSES.DOM_IMAGE).each(function () {
+      operator(LIST_DETAILS_WAREHOUSES.DOM_IMAGES).each(function () {
         dataImage.push(operator(this).find('img').attr('data-src'));
       });
       // tslint:disable-next-line: prefer-for-of
@@ -129,7 +129,7 @@ async function detailPageProvince() {
           value: dataImage[t],
         });
       }
-      operator(LIST_DETAILS_WAREHOUSES.DOM_TABLE).each(function () {
+      operator(LIST_DETAILS_WAREHOUSES.DOM_TABLES).each(function () {
         dataPage.push({
           key: normalizeText(operator(this).find('th').text()),
           value: operator(this).find('td').text(),

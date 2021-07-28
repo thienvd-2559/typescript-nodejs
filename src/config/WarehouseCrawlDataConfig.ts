@@ -1,9 +1,9 @@
-const URL_HOME_PAGE = 'https://www.cbre-propertysearch.jp';
-const URL_PROVINCES = URL_HOME_PAGE + '/industrial';
+const URL_HOME_PAGES = 'https://www.cbre-propertysearch.jp';
+const URL_PROVINCES = URL_HOME_PAGES + '/industrial';
 
 const LIST_PROVINCES = {
-  DOM_LAYOUT_PROVINCE: '#contents > div.topArea > div',
-  DOM_URL_PROVINCE: 'div > div > div > ul > li',
+  DOM_LAYOUT_PROVINCES: '#contents > div.topArea > div',
+  DOM_URL_PROVINCES: 'div > div > div > ul > li',
 };
 
 const LIST_WAREHOUSES = {
@@ -17,8 +17,8 @@ const LIST_WAREHOUSES = {
 };
 
 const LIST_DETAILS_WAREHOUSES = {
-  DOM_IMAGE: '#contents > div > div.columnSection.clearfix > div > div.imgSection > div > div.photo > div.inner > div > div',
-  DOM_TABLE: '#contents > div > div.columnSection.clearfix > div > div.bodySection > table > tbody > tr',
+  DOM_IMAGES: '#contents > div > div.columnSection.clearfix > div > div.imgSection > div > div.photo > div.inner > div > div',
+  DOM_TABLES: '#contents > div > div.columnSection.clearfix > div > div.bodySection > table > tbody > tr',
 };
 
-export { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, LIST_DETAILS_WAREHOUSES };
+export { URL_HOME_PAGES, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, LIST_DETAILS_WAREHOUSES };
