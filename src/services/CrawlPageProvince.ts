@@ -1,10 +1,13 @@
 import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
-import { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WARE_HOUSE, LIST_DETAILS_WARE_HOUSE } from '../config/WarehouseCrawlDataConfig';
+import { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, LIST_DETAILS_WAREHOUSES } from '../config/WarehouseCrawlDataConfig';
 import { normalizeText } from '../utils/string';
 import fs from 'fs';
 import { readFile } from 'fs/promises';
+
+const filePathDetailsWareHouse = 'pathDetailsWareHouse.json';
+const pathDetailsWareHouse = 'output.json';
 
 async function crawlLinkProvinces() {
   try {
@@ -45,7 +48,7 @@ async function crawlPathWareHouse() {
       };
       const result = await request_promise(options);
       const operator = cheerio.load(result);
-      const totalPaging = operator(LIST_WARE_HOUSE.DOM_TOTAL_PAGING).text();
+      const totalPaging = operator(LIST_WAREHOUSES.DOM_TOTAL_PAGING).text();
       let countPaging = 1;
       if (totalPaging === '') {
         countPaging = 1;
@@ -62,13 +65,13 @@ async function crawlPathWareHouse() {
         winston.info(optionsPaging.uri);
         const resultPaging = await request_promise(optionsPaging);
         const operatorPaging = cheerio.load(resultPaging);
-        operatorPaging(LIST_WARE_HOUSE.DOM_URL_WARE_HOUSE_).each(function () {
+        operatorPaging(LIST_WAREHOUSES.DOM_URL_WAREHOUSES).each(function () {
           dataCrawlPathWareHouse.push({
             url: `${URL_HOME_PAGE}${operatorPaging(this).find('a').attr('href')}`,
             status: 0,
           });
         });
-        fs.writeFile('pathDetailsWareHouse.json', JSON.stringify(dataCrawlPathWareHouse), (err) => {
+        fs.writeFile(filePathDetailsWareHouse, JSON.stringify(dataCrawlPathWareHouse), (err) => {
           if (err) throw err;
           winston.info(`save url ${optionsPaging.uri} done !`);
         });
@@ -84,18 +87,17 @@ async function crawlPathWareHouse() {
 async function detailPageWarehouse() {
   try {
     // Check if the file exists or not
-    const filePathDetailsWareHouse = 'pathDetailsWareHouse.json';
     if (!fs.existsSync(filePathDetailsWareHouse)) {
       // Create file;
-      fs.writeFile('pathDetailsWareHouse.json', '', (err) => {
+      fs.writeFile(filePathDetailsWareHouse, '', (err) => {
         if (err) throw err;
       });
     }
 
     // Read file json
-    let dataPathWareHouse: any = await readFile('pathDetailsWareHouse.json', 'utf8');
+    let dataPathWareHouse: any = await readFile(filePathDetailsWareHouse, 'utf-8');
 
-    // Check if the json file has data, if it is not possible to crawl data first.
+    // Check if the json file pathDetailsWareHouse.json has data, if file no data -> get data in function crawlPathWareHouse()
     if (Object.keys(dataPathWareHouse).length === 0 || dataPathWareHouse.constructor === Object) {
       dataPathWareHouse = await crawlPathWareHouse();
     } else {
@@ -104,17 +106,17 @@ async function detailPageWarehouse() {
 
     // Check file json, if status = 0 => crawl data warehouse details with status = 0 -> save data 1 file and change status = 0->1
     // Check if the file exists or not
-    const pathDetailsWareHouse = 'data.json';
+
     if (!fs.existsSync(pathDetailsWareHouse)) {
       // Create file;
-      fs.writeFile('data.json', '', (err) => {
+      fs.writeFile(pathDetailsWareHouse, '', (err) => {
         if (err) throw err;
       });
     }
 
-    // read file data.json . If data file dataOutput = data file data.json, else dataOutput = []
+    // read file output.json . If data file dataOutput = data file output.json, else dataOutput = []
     let dataOutput = [];
-    const dataTest = await readFile('data.json', 'utf8');
+    const dataTest = await readFile(pathDetailsWareHouse, 'utf-8');
     if (Object.keys(dataTest).length === 0 || dataTest.constructor === Object) {
       dataOutput = [];
     } else {
@@ -132,7 +134,7 @@ async function detailPageWarehouse() {
         const resultProvince = await request_promise(optionsProvince);
         const operator = cheerio.load(resultProvince);
         const dataImage = [];
-        operator(LIST_DETAILS_WARE_HOUSE.DOM_IMAGE).each(function () {
+        operator(LIST_DETAILS_WAREHOUSES.DOM_IMAGE).each(function () {
           dataImage.push(operator(this).find('img').attr('data-src'));
         });
         for (let t = 0; t < dataImage.length; t++) {
@@ -144,7 +146,7 @@ async function detailPageWarehouse() {
           }
         }
 
-        operator(LIST_DETAILS_WARE_HOUSE.DOM_TABLE).each(function () {
+        operator(LIST_DETAILS_WAREHOUSES.DOM_TABLE).each(function () {
           dataPage.push({
             key: normalizeText(operator(this).find('th').text()),
             value: normalizeText(operator(this).find('td').text()),
@@ -154,11 +156,11 @@ async function detailPageWarehouse() {
         winston.info(dataPage);
         dataOutput.push(dataPage);
 
-        fs.writeFile('data.json', JSON.stringify(dataOutput), (err) => {
+        fs.writeFile(pathDetailsWareHouse, JSON.stringify(dataOutput), (err) => {
           if (err) throw err;
           winston.info('save data detail ware house done !');
         });
-        fs.writeFile('pathDetailsWareHouse.json', JSON.stringify(dataPathWareHouse), (err) => {
+        fs.writeFile(filePathDetailsWareHouse, JSON.stringify(dataPathWareHouse), (err) => {
           if (err) throw err;
           winston.info('update status = 1 done !');
         });
