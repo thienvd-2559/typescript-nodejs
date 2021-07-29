@@ -1,8 +1,8 @@
-import { detailPageWarehouse } from '../services/CrawlPageProvince';
+import { crawlUrlProvinces, crawlUrlWareHouses, urlWareHouses, detailPageWarehouses } from '../services/CrawlPageProvince';
 
 export default class CrawlPageProvinceController {
   public static async crawlPageProvince(req, res, next): Promise<any> {
-    const detailWarehouse = await detailPageWarehouse();
+    const detailWarehouse = await detailPageWarehouses();
     return res.json({
       data: detailWarehouse,
     });

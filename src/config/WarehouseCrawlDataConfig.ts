@@ -16,9 +16,9 @@ const LIST_WAREHOUSES = {
   DOM_URL_WAREHOUSES: '#contents > div > div.propertyList > div > div.itemGroup > div > div.inner > div > div.body > div.head > h2',
 };
 
-const DETAILS_WAREHOUSES = {
+const DETAILS_WAREHOUSE = {
   DOM_IMAGES: '#contents > div > div.columnSection.clearfix > div > div.imgSection > div > div.photo > div.inner > div > div',
   DOM_TABLES: '#contents > div > div.columnSection.clearfix > div > div.bodySection > table > tbody > tr',
 };
 
-export { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, DETAILS_WAREHOUSES };
+export { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, DETAILS_WAREHOUSE };
