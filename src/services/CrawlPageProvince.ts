@@ -10,7 +10,7 @@ const fileNameUrlPageProvinces = 'urlPageProvinces.json';
 const fileNameUrlDetailsWareHouse = 'urlDetailsWarehouse.json';
 const fileNameOutput = 'output.json';
 
-async function crawlLinkProvinces() {
+async function crawlUrlProvinces() {
   try {
     const optionsRequest = {
       method: 'GET',
@@ -40,8 +40,8 @@ async function crawlLinkProvinces() {
 
 async function crawlUrlWareHouse() {
   const dataCrawlUrlWareHouse = [];
-  const linksProvinces = await crawlLinkProvinces();
-  for (const i of linksProvinces) {
+  const urlProvinces = await crawlUrlProvinces();
+  for (const i of urlProvinces) {
     try {
       const totalPage = await totalPages(i.urlWareHouse);
       winston.info(totalPage);
