@@ -4,5 +4,6 @@ dist
 .env
 logs
 yarn-error.log
-pathDetailsWareHouse.json
-data.json
+urlPageProvinces.json
+urlDetailsWarehouse.json
+output.json
