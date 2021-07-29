@@ -1,5 +1,5 @@
-const URL_HOME_PAGES = 'https://www.cbre-propertysearch.jp';
-const URL_PROVINCES = URL_HOME_PAGES + '/industrial';
+const URL_HOME_PAGE = 'https://www.cbre-propertysearch.jp';
+const URL_PROVINCES = URL_HOME_PAGE + '/industrial';
 
 const LIST_PROVINCES = {
   DOM_LAYOUT_PROVINCES: '#contents > div.topArea > div',
@@ -21,4 +21,4 @@ const LIST_DETAILS_WAREHOUSES = {
   DOM_TABLES: '#contents > div > div.columnSection.clearfix > div > div.bodySection > table > tbody > tr',
 };
 
-export { URL_HOME_PAGES, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, LIST_DETAILS_WAREHOUSES };
+export { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, LIST_DETAILS_WAREHOUSES };
