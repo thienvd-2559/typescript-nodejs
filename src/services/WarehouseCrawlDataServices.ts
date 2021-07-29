@@ -2,7 +2,7 @@ import puppeteer from 'puppeteer';
 import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
-import { URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, LIST_DETAILS_WAREHOUSES } from '../config/WarehouseCrawlDataConfig';
+import { URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, DETAILS_WAREHOUSES } from '../config/WarehouseCrawlDataConfig';
 import { normalizeText } from '../utils/string';
 
 async function warehouseCrawlData() {
@@ -119,7 +119,7 @@ async function detailPageProvince() {
       const operator = cheerio.load(resultProvince);
       const dataPage = [];
       const dataImage = [];
-      operator(LIST_DETAILS_WAREHOUSES.DOM_IMAGES).each(function () {
+      operator(DETAILS_WAREHOUSES.DOM_IMAGES).each(function () {
         dataImage.push(operator(this).find('img').attr('data-src'));
       });
       // tslint:disable-next-line: prefer-for-of
@@ -129,7 +129,7 @@ async function detailPageProvince() {
           value: dataImage[t],
         });
       }
-      operator(LIST_DETAILS_WAREHOUSES.DOM_TABLES).each(function () {
+      operator(DETAILS_WAREHOUSES.DOM_TABLES).each(function () {
         dataPage.push({
           key: normalizeText(operator(this).find('th').text()),
           value: operator(this).find('td').text(),

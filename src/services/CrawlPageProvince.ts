@@ -1,7 +1,7 @@
 import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
-import { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, LIST_DETAILS_WAREHOUSES } from '../config/WarehouseCrawlDataConfig';
+import { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, DETAILS_WAREHOUSES } from '../config/WarehouseCrawlDataConfig';
 import { normalizeText } from '../utils/string';
 import fs from 'fs';
 import { readFile } from 'fs/promises';
@@ -140,7 +140,7 @@ async function detailPageWarehouse() {
     }
 
     for (const dataUrl of dataUrlWareHouse) {
-      const start = Date.now();
+      const timeStartCrawl = Date.now();
       const dataPage = [];
       if (dataUrl.status === 0) {
         const optionsProvince = {
@@ -150,7 +150,7 @@ async function detailPageWarehouse() {
         const resultProvince = await request_promise(optionsProvince);
         const operator = cheerio.load(resultProvince);
         const dataImage = [];
-        operator(LIST_DETAILS_WAREHOUSES.DOM_IMAGES).each(function () {
+        operator(DETAILS_WAREHOUSES.DOM_IMAGES).each(function () {
           dataImage.push(operator(this).find('img').attr('data-src'));
         });
         for (let t = 0; t < dataImage.length; t++) {
@@ -162,7 +162,7 @@ async function detailPageWarehouse() {
           }
         }
 
-        operator(LIST_DETAILS_WAREHOUSES.DOM_TABLES).each(function () {
+        operator(DETAILS_WAREHOUSES.DOM_TABLES).each(function () {
           dataPage.push({
             key: normalizeText(operator(this).find('th').text()),
             value: normalizeText(operator(this).find('td').text()),
@@ -180,7 +180,7 @@ async function detailPageWarehouse() {
           if (err) throw err;
           winston.info('update status = 1 done !');
         });
-        const dateTimeRequest = (Date.now() - start) / 1000;
+        const dateTimeRequest = (Date.now() - timeStartCrawl) / 1000;
         winston.info({
           'Request time': dateTimeRequest,
         });
