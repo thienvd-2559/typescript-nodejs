@@ -2,7 +2,7 @@ import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
 import { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, DETAILS_WAREHOUSE } from '../config/WarehouseCrawlDataConfig';
-import { DATA_URL_PAGE_PROVINCES, DATA_URL_DETAILS_WAREHOUSE, DATA_OUTPUT, TIMEOUT } from '../config/ConstFileJson';
+import { FOLDER_NAME, FILE_NAME_URL_PAGE_PROVINCES, FILE_NAME_URL_DETAILS_WAREHOUSE, FILE_NAME_OUTPUT, TIMEOUT_REQUEST_URL_WAREHOUSE } from '../config/ConstFileJson';
 import { normalizeText } from '../utils/string';
 import fs from 'fs';
 import { readFile } from 'fs/promises';
@@ -39,7 +39,6 @@ async function crawlUrlProvinces() {
 async function saveUrlProvinces() {
   const dataCrawlUrlWareHouse = [];
   const urlProvinces = await crawlUrlProvinces();
-  await waitingTime();
 
   for (const i of urlProvinces) {
     try {
@@ -54,7 +53,7 @@ async function saveUrlProvinces() {
           url: optionsPaging.uri,
           status: 0,
         });
-        fs.writeFile(DATA_URL_PAGE_PROVINCES, JSON.stringify(dataCrawlUrlWareHouse), (err) => {
+        fs.writeFile(`${FOLDER_NAME}/${FILE_NAME_URL_PAGE_PROVINCES}`, JSON.stringify(dataCrawlUrlWareHouse), (err) => {
           if (err) throw err;
           winston.info(`save url ${optionsPaging.uri} done !`);
         });
@@ -70,9 +69,8 @@ async function saveUrlProvinces() {
 
 async function crawlUrlWareHouses() {
   const dataCrawlUrlWareHouse = [];
-  existsPath(DATA_URL_PAGE_PROVINCES);
-  const dataCrawlPageProvinces = await getDataFileNotTimeOut(DATA_URL_PAGE_PROVINCES, saveUrlProvinces);
-  await waitingTime();
+  createPath(`${FOLDER_NAME}/${FILE_NAME_URL_PAGE_PROVINCES}`);
+  const dataCrawlPageProvinces = await getDataFileNotTimeOut(`${FOLDER_NAME}/${FILE_NAME_URL_PAGE_PROVINCES}`, saveUrlProvinces);
 
   for (const dataPageProvince of dataCrawlPageProvinces) {
     if (dataPageProvince.status === 0) {
@@ -89,11 +87,11 @@ async function crawlUrlWareHouses() {
         });
       });
       dataPageProvince.status = 1;
-      fs.writeFile(DATA_URL_DETAILS_WAREHOUSE, JSON.stringify(dataCrawlUrlWareHouse), (err) => {
+      fs.writeFile(`${FOLDER_NAME}/${FILE_NAME_URL_DETAILS_WAREHOUSE}`, JSON.stringify(dataCrawlUrlWareHouse), (err) => {
         if (err) throw err;
         winston.info(`save url ${optionsPaging.uri} done !`);
       });
-      fs.writeFile(DATA_URL_PAGE_PROVINCES, JSON.stringify(dataCrawlPageProvinces), (err) => {
+      fs.writeFile(`${FOLDER_NAME}/${FILE_NAME_URL_PAGE_PROVINCES}`, JSON.stringify(dataCrawlPageProvinces), (err) => {
         if (err) throw err;
         winston.info('update status = 1 done !');
       });
@@ -105,26 +103,18 @@ async function crawlUrlWareHouses() {
 
 async function detailPageWarehouses() {
   try {
-    // Check file json, if status = 0 => crawl data warehouse details with status = 0 -> save data 1 file and change status = 0->1
-    // Check if the file exists or not
-    if (!fs.existsSync(DATA_OUTPUT)) {
-      // Create file;
-      fs.writeFile(DATA_OUTPUT, '', (err) => {
-        if (err) throw err;
-      });
-    }
+    createFolder(FOLDER_NAME);
+    createPath(`${FOLDER_NAME}/${FILE_NAME_OUTPUT}`);
 
     // read file output.json . If data file dataOutput = data file output.json, else dataOutput = []
-    const dataFileNameOutput = await readFile(DATA_OUTPUT, 'utf-8');
+    const dataFileNameOutput = await readFile(`${FOLDER_NAME}/${FILE_NAME_OUTPUT}`, 'utf-8');
     let dataOutput = [];
     if (Object.keys(dataFileNameOutput).length !== 0 && dataFileNameOutput.constructor !== Object) {
       dataOutput = JSON.parse(dataFileNameOutput);
     }
 
-    existsPath(DATA_URL_DETAILS_WAREHOUSE);
-    const dataUrlWareHouses = await getDataFileTimeOut(DATA_URL_DETAILS_WAREHOUSE, crawlUrlWareHouses);
-
-    await waitingTime();
+    createPath(`${FOLDER_NAME}/${FILE_NAME_URL_DETAILS_WAREHOUSE}`);
+    const dataUrlWareHouses = await getDataFileTimeOut(`${FOLDER_NAME}/${FILE_NAME_URL_DETAILS_WAREHOUSE}`, crawlUrlWareHouses);
 
     for (const dataUrl of dataUrlWareHouses) {
       const timeStartCrawl = Date.now();
@@ -156,14 +146,15 @@ async function detailPageWarehouses() {
       });
       dataUrl.status = 1;
       dataOutput.push(dataWarehouse);
-      fs.writeFile(DATA_OUTPUT, JSON.stringify(dataOutput), (err) => {
+      await fs.writeFile(`${FOLDER_NAME}/${FILE_NAME_OUTPUT}`, JSON.stringify(dataOutput), (err) => {
         if (err) throw err;
         winston.info('save data detail ware house done !');
       });
-      fs.writeFile(DATA_URL_DETAILS_WAREHOUSE, JSON.stringify(dataUrlWareHouses), (err) => {
+      await fs.writeFile(`${FOLDER_NAME}/${FILE_NAME_URL_DETAILS_WAREHOUSE}`, JSON.stringify(dataUrlWareHouses), (err) => {
         if (err) throw err;
         winston.info('update status = 1 done !');
       });
+      await waitingTime();
       const dateTimeRequest = (Date.now() - timeStartCrawl) / 1000;
       winston.info({
         'Request time': dateTimeRequest,
@@ -189,7 +180,13 @@ async function totalPages(url) {
   return pages === '' ? 1 : Number(pages);
 }
 
-async function existsPath(path) {
+async function createFolder(folder) {
+  if (!fs.existsSync(folder)) {
+    fs.mkdirSync(folder);
+  }
+}
+
+async function createPath(path) {
   // Check if the file exists or not
   if (!fs.existsSync(path)) {
     // Create file;
@@ -221,7 +218,7 @@ async function getDataFileTimeOut(path, functionPass) {
       data = await functionPass();
     } else {
       data = JSON.parse(data);
-      let urlPageProvinces: any = await readFile(DATA_URL_PAGE_PROVINCES, 'utf-8');
+      let urlPageProvinces: any = await readFile(`${FOLDER_NAME}/${FILE_NAME_URL_PAGE_PROVINCES}`, 'utf-8');
       urlPageProvinces = JSON.parse(urlPageProvinces);
       const checkStatus = urlPageProvinces.find((url) => url.status === 0);
       if (checkStatus) {
@@ -240,7 +237,7 @@ async function waitingTime() {
     setTimeout(() => {
       winston.info('waitingTime');
       resolve();
-    }, TIMEOUT);
+    }, TIMEOUT_REQUEST_URL_WAREHOUSE);
   });
 }
 
