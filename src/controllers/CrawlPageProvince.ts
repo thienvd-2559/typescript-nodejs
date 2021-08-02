@@ -1,4 +1,4 @@
-import { crawlUrlProvinces, crawlUrlWareHouses, urlWareHouses, detailPageWarehouses } from '../services/CrawlPageProvince';
+import { detailPageWarehouses, crawlUrlWareHouses } from '../services/CrawlPageProvince';
 
 export default class CrawlPageProvinceController {
   public static async crawlPageProvince(req, res, next): Promise<any> {
