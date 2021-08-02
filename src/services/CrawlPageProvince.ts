@@ -2,7 +2,7 @@ import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
 import { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, DETAILS_WAREHOUSE } from '../config/WarehouseCrawlDataConfig';
-import { fileNameUrlPageProvinces, fileNameUrlDetailsWareHouse, fileNameOutput, timeout } from '../config/ConstFileJson';
+import { DATA_URL_PAGE_PROVINCES, DATA_URL_DETAILS_WAREHOUSE, DATA_OUTPUT, TIMEOUT } from '../config/ConstFileJson';
 import { normalizeText } from '../utils/string';
 import fs from 'fs';
 import { readFile } from 'fs/promises';
@@ -54,7 +54,7 @@ async function saveUrlProvinces() {
           url: optionsPaging.uri,
           status: 0,
         });
-        fs.writeFile(fileNameUrlPageProvinces, JSON.stringify(dataCrawlUrlWareHouse), (err) => {
+        fs.writeFile(DATA_URL_PAGE_PROVINCES, JSON.stringify(dataCrawlUrlWareHouse), (err) => {
           if (err) throw err;
           winston.info(`save url ${optionsPaging.uri} done !`);
         });
@@ -70,7 +70,8 @@ async function saveUrlProvinces() {
 
 async function crawlUrlWareHouses() {
   const dataCrawlUrlWareHouse = [];
-  const dataCrawlPageProvinces = await checkDataFile(fileNameUrlPageProvinces, saveUrlProvinces);
+  existsPath(DATA_URL_PAGE_PROVINCES);
+  const dataCrawlPageProvinces = await getDataFileNotTimeOut(DATA_URL_PAGE_PROVINCES, saveUrlProvinces);
   await waitingTime();
 
   for (const dataPageProvince of dataCrawlPageProvinces) {
@@ -88,11 +89,11 @@ async function crawlUrlWareHouses() {
         });
       });
       dataPageProvince.status = 1;
-      fs.writeFile(fileNameUrlDetailsWareHouse, JSON.stringify(dataCrawlUrlWareHouse), (err) => {
+      fs.writeFile(DATA_URL_DETAILS_WAREHOUSE, JSON.stringify(dataCrawlUrlWareHouse), (err) => {
         if (err) throw err;
         winston.info(`save url ${optionsPaging.uri} done !`);
       });
-      fs.writeFile(fileNameUrlPageProvinces, JSON.stringify(dataCrawlPageProvinces), (err) => {
+      fs.writeFile(DATA_URL_PAGE_PROVINCES, JSON.stringify(dataCrawlPageProvinces), (err) => {
         if (err) throw err;
         winston.info('update status = 1 done !');
       });
@@ -106,21 +107,22 @@ async function detailPageWarehouses() {
   try {
     // Check file json, if status = 0 => crawl data warehouse details with status = 0 -> save data 1 file and change status = 0->1
     // Check if the file exists or not
-    if (!fs.existsSync(fileNameOutput)) {
+    if (!fs.existsSync(DATA_OUTPUT)) {
       // Create file;
-      fs.writeFile(fileNameOutput, '', (err) => {
+      fs.writeFile(DATA_OUTPUT, '', (err) => {
         if (err) throw err;
       });
     }
 
     // read file output.json . If data file dataOutput = data file output.json, else dataOutput = []
-    const dataFileNameOutput = await readFile(fileNameOutput, 'utf-8');
+    const dataFileNameOutput = await readFile(DATA_OUTPUT, 'utf-8');
     let dataOutput = [];
     if (Object.keys(dataFileNameOutput).length !== 0 && dataFileNameOutput.constructor !== Object) {
       dataOutput = JSON.parse(dataFileNameOutput);
     }
 
-    const dataUrlWareHouses = await checkDataFile2(fileNameUrlDetailsWareHouse, crawlUrlWareHouses);
+    existsPath(DATA_URL_DETAILS_WAREHOUSE);
+    const dataUrlWareHouses = await getDataFileTimeOut(DATA_URL_DETAILS_WAREHOUSE, crawlUrlWareHouses);
 
     await waitingTime();
 
@@ -130,44 +132,45 @@ async function detailPageWarehouses() {
 
       if (dataUrl.status !== 0) {
         continue;
-      } else {
-        const optionsWarehouse = {
-          method: 'GET',
-          uri: dataUrl.url,
-        };
-        const resultProvince = await request_promise(optionsWarehouse);
-        const operator = cheerio.load(resultProvince);
-        operator(DETAILS_WAREHOUSE.DOM_IMAGES).each(function () {
-          const image = operator(this).find('img').attr('data-src');
-          if (image) {
-            dataWarehouse.push({
-              value: image,
-            });
-          }
-        });
-        operator(DETAILS_WAREHOUSE.DOM_TABLES).each(function () {
-          dataWarehouse.push({
-            key: normalizeText(operator(this).find('th').text()),
-            value: normalizeText(operator(this).find('td').text()),
-          });
-        });
-        dataUrl.status = 1;
-        dataOutput.push(dataWarehouse);
-        fs.writeFile(fileNameOutput, JSON.stringify(dataOutput), (err) => {
-          if (err) throw err;
-          winston.info('save data detail ware house done !');
-        });
-        fs.writeFile(fileNameUrlDetailsWareHouse, JSON.stringify(dataUrlWareHouses), (err) => {
-          if (err) throw err;
-          winston.info('update status = 1 done !');
-        });
-        const dateTimeRequest = (Date.now() - timeStartCrawl) / 1000;
-        winston.info({
-          'Request time': dateTimeRequest,
-        });
       }
+
+      const optionsWarehouse = {
+        method: 'GET',
+        uri: dataUrl.url,
+      };
+      const resultProvince = await request_promise(optionsWarehouse);
+      const operator = cheerio.load(resultProvince);
+      operator(DETAILS_WAREHOUSE.DOM_IMAGES).each(function () {
+        const image = operator(this).find('img').attr('data-src');
+        if (image) {
+          dataWarehouse.push({
+            value: image,
+          });
+        }
+      });
+      operator(DETAILS_WAREHOUSE.DOM_TABLES).each(function () {
+        dataWarehouse.push({
+          key: normalizeText(operator(this).find('th').text()),
+          value: normalizeText(operator(this).find('td').text()),
+        });
+      });
+      dataUrl.status = 1;
+      dataOutput.push(dataWarehouse);
+      fs.writeFile(DATA_OUTPUT, JSON.stringify(dataOutput), (err) => {
+        if (err) throw err;
+        winston.info('save data detail ware house done !');
+      });
+      fs.writeFile(DATA_URL_DETAILS_WAREHOUSE, JSON.stringify(dataUrlWareHouses), (err) => {
+        if (err) throw err;
+        winston.info('update status = 1 done !');
+      });
+      const dateTimeRequest = (Date.now() - timeStartCrawl) / 1000;
+      winston.info({
+        'Request time': dateTimeRequest,
+      });
     }
     winston.info('[crawl success data details ware house]');
+
     return dataOutput;
   } catch (error) {
     winston.info(error);
@@ -182,10 +185,11 @@ async function totalPages(url) {
   const result = await request_promise(options);
   const operator = cheerio.load(result);
   const pages = operator(LIST_WAREHOUSES.DOM_TOTAL_PAGING).text();
+
   return pages === '' ? 1 : Number(pages);
 }
 
-async function checkDataFile(path, functionPass) {
+async function existsPath(path) {
   // Check if the file exists or not
   if (!fs.existsSync(path)) {
     // Create file;
@@ -193,6 +197,9 @@ async function checkDataFile(path, functionPass) {
       if (err) throw err;
     });
   }
+}
+
+async function getDataFileNotTimeOut(path, functionPass) {
   // Read file json
   let data: any = await readFile(path, 'utf-8');
   // Check if the json file urlDetailsWareHouse.json has data, if file no data -> get data in function crawlUrlWareHouse()
@@ -205,15 +212,8 @@ async function checkDataFile(path, functionPass) {
   return data;
 }
 
-async function checkDataFile2(path, functionPass) {
+async function getDataFileTimeOut(path, functionPass) {
   try {
-    // Check if the file exists or not
-    if (!fs.existsSync(path)) {
-      // Create file;
-      fs.writeFile(path, '', (err) => {
-        if (err) throw err;
-      });
-    }
     // Read file json
     let data: any = await readFile(path, 'utf-8');
     // Check if the json file urlDetailsWareHouse.json has data, if file no data -> get data in function crawlUrlWareHouse()
@@ -221,7 +221,7 @@ async function checkDataFile2(path, functionPass) {
       data = await functionPass();
     } else {
       data = JSON.parse(data);
-      let urlPageProvinces: any = await readFile(fileNameUrlPageProvinces, 'utf-8');
+      let urlPageProvinces: any = await readFile(DATA_URL_PAGE_PROVINCES, 'utf-8');
       urlPageProvinces = JSON.parse(urlPageProvinces);
       const checkStatus = urlPageProvinces.find((url) => url.status === 0);
       if (checkStatus) {
@@ -240,7 +240,7 @@ async function waitingTime() {
     setTimeout(() => {
       winston.info('waitingTime');
       resolve();
-    }, timeout);
+    }, TIMEOUT);
   });
 }
 
