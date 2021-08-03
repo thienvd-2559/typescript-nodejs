@@ -2,7 +2,7 @@ import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
 import { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, DETAILS_WAREHOUSE } from '../config/WarehouseCrawlDataConfig';
-import { FOLDER_FILE_JSON, FILE_URL_PROVINCES, FILE_URL_WAREHOUSE, FILE_DATA_WAREHOUSE, TIMEOUT_BETWEEN_REQUEST } from '../config/ConstFileJson';
+import { FOLDER_FILE_JSON, FILE_PROVINCES, FILE_URL_PROVINCES, FILE_URL_WAREHOUSE, FILE_DATA_WAREHOUSE, TIMEOUT_BETWEEN_REQUEST } from '../config/ConstFileJson';
 import { normalizeText } from '../utils/string';
 import fs from 'fs';
 import { readFile } from 'fs/promises';
@@ -23,11 +23,18 @@ async function crawlUrlProvinces() {
           const dataHref = operator(this).find('a').attr('href');
           if (dataHref) {
             urlProvinces.push({
-              urlProvince: `${URL_HOME_PAGE}${dataHref}`,
+              url: `${URL_HOME_PAGE}${dataHref}`,
+              status: 0,
             });
           }
         });
     });
+
+    fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`, JSON.stringify(urlProvinces), (err) => {
+      if (err) throw err;
+      winston.info(`save provinces done !`);
+    });
+
     winston.info('[crawl success data url provinces]');
 
     return urlProvinces;
@@ -37,25 +44,38 @@ async function crawlUrlProvinces() {
 }
 
 async function saveUrlProvinces() {
-  const urlProvince = [];
-  const provinces = await crawlUrlProvinces();
+  let urlProvince = [];
+  await createPath(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`);
+  const provinces = await getDataFileNotTimeOut(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`, crawlUrlProvinces);
+  const dataFileUrlProvince = await readFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, 'utf-8');
+  if (Object.keys(dataFileUrlProvince).length !== 0 && dataFileUrlProvince.constructor !== Object) {
+    urlProvince = JSON.parse(dataFileUrlProvince);
+  }
 
-  for (const i of provinces) {
+  for (const province of provinces) {
     try {
-      const totalPage = await totalPages(i.urlProvince);
+      if (province.status !== 0) {
+        continue;
+      }
+      const totalPage = await totalPages(province.url);
       winston.info(totalPage);
       for (let k = 0; k < totalPage; k++) {
         const optionsPaging = {
           method: 'GET',
-          uri: `${i.urlProvince}?page=${k + 1}`,
+          uri: `${province.url}?page=${k + 1}`,
         };
         urlProvince.push({
           url: optionsPaging.uri,
           status: 0,
         });
+        province.status = 1;
         fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, JSON.stringify(urlProvince), (err) => {
           if (err) throw err;
           winston.info(`save url ${optionsPaging.uri} done !`);
+        });
+        fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`, JSON.stringify(provinces), (err) => {
+          if (err) throw err;
+          winston.info('update status = 1 done !');
         });
       }
     } catch (error) {
@@ -63,14 +83,13 @@ async function saveUrlProvinces() {
     }
   }
   winston.info('[crawl success url province]');
-
   return urlProvince;
 }
 
 async function crawlUrlWareHouses() {
   let urlWarehouse = [];
   await createPath(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`);
-  const urlProvinces = await getDataFileNotTimeOut(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, saveUrlProvinces);
+  const urlProvinces = await getDataFileTimeOut(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, saveUrlProvinces);
 
   const dataFileUrlWarehouse = await readFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, 'utf-8');
 
@@ -79,29 +98,31 @@ async function crawlUrlWareHouses() {
   }
 
   for (const province of urlProvinces) {
-    if (province.status === 0) {
-      const optionsPaging = {
-        method: 'GET',
-        uri: `${province.url}`,
-      };
-      const resultPaging = await request_promise(optionsPaging);
-      const operatorPaging = cheerio.load(resultPaging);
-      operatorPaging(LIST_WAREHOUSES.DOM_URL_WAREHOUSES).each(function () {
-        urlWarehouse.push({
-          url: `${URL_HOME_PAGE}${operatorPaging(this).find('a').attr('href')}`,
-          status: 0,
-        });
-      });
-      province.status = 1;
-      fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, JSON.stringify(urlWarehouse), (err) => {
-        if (err) throw err;
-        winston.info(`save url ${optionsPaging.uri} done !`);
-      });
-      fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, JSON.stringify(urlProvinces), (err) => {
-        if (err) throw err;
-        winston.info('update status = 1 done !');
-      });
+    if (province.status !== 0) {
+      continue;
     }
+
+    const optionsPaging = {
+      method: 'GET',
+      uri: `${province.url}`,
+    };
+    const resultPaging = await request_promise(optionsPaging);
+    const operatorPaging = cheerio.load(resultPaging);
+    operatorPaging(LIST_WAREHOUSES.DOM_URL_WAREHOUSES).each(function () {
+      urlWarehouse.push({
+        url: `${URL_HOME_PAGE}${operatorPaging(this).find('a').attr('href')}`,
+        status: 0,
+      });
+    });
+    province.status = 1;
+    fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, JSON.stringify(urlWarehouse), (err) => {
+      if (err) throw err;
+      winston.info(`save url ${optionsPaging.uri} done !`);
+    });
+    fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, JSON.stringify(urlProvinces), (err) => {
+      if (err) throw err;
+      winston.info('update status = 1 done !');
+    });
   }
 
   return urlWarehouse;
@@ -247,4 +268,4 @@ async function waitingTime() {
   });
 }
 
-export { crawlUrlProvinces, saveUrlProvinces, crawlUrlWareHouses, detailWarehouses };
+export { detailWarehouses };
