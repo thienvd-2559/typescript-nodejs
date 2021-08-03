@@ -15,6 +15,6 @@ router.get('/warehouse-detail-page/:url', WarehouseController.detailWarehouse);
 router.get('/warehouse-crawl-detail-page-province', WarehouseController.detailProvince);
 
 // crawl page province
-router.get('/crawl-detail-page-province', CrawlPageProvinceController.crawlPageProvince);
+router.get('/crawl-detail-page-province', CrawlPageProvinceController.detailWarehouses);
 
 export default router;
