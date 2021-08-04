@@ -46,7 +46,7 @@ async function crawlUrlProvinces() {
 async function saveUrlProvinces() {
   let urlProvince = [];
   await createPath(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`);
-  const provinces = await getDataFileNotTimeOut(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`, crawlUrlProvinces);
+  const provinces = await getDataFileNotTimeOut(`${FILE_PROVINCES}`, crawlUrlProvinces);
   const dataFileUrlProvince = await readFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, 'utf-8');
   if (Object.keys(dataFileUrlProvince).length !== 0 && dataFileUrlProvince.constructor !== Object) {
     urlProvince = JSON.parse(dataFileUrlProvince);
@@ -89,7 +89,7 @@ async function saveUrlProvinces() {
 async function crawlUrlWareHouses() {
   let urlWarehouse = [];
   await createPath(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`);
-  const urlProvinces = await getDataFileTimeOut(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, saveUrlProvinces);
+  const urlProvinces = await getDataFileTimeOut(`${FILE_URL_PROVINCES}`, saveUrlProvinces, FILE_PROVINCES);
 
   const dataFileUrlWarehouse = await readFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, 'utf-8');
 
@@ -141,7 +141,7 @@ async function detailWarehouses() {
     }
 
     createPath(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
-    const dataUrlWareHouses = await getDataFileTimeOut(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, crawlUrlWareHouses);
+    const dataUrlWareHouses = await getDataFileTimeOut(`${FILE_URL_WAREHOUSE}`, crawlUrlWareHouses, FILE_URL_PROVINCES);
 
     for (const dataUrl of dataUrlWareHouses) {
       const timeStartCrawl = Date.now();
@@ -225,7 +225,7 @@ function createPath(path) {
 
 async function getDataFileNotTimeOut(path, functionPass) {
   // Read file json
-  let data: any = await readFile(path, 'utf-8');
+  let data: any = await readFile(`${FOLDER_FILE_JSON}/${path}`, 'utf-8');
   // Check if the json file urlDetailsWareHouse.json has data, if file no data -> get data in function crawlUrlWareHouse()
   if (Object.keys(data).length === 0 || data.constructor === Object) {
     data = await functionPass();
@@ -236,18 +236,18 @@ async function getDataFileNotTimeOut(path, functionPass) {
   return data;
 }
 
-async function getDataFileTimeOut(path, functionPass) {
+async function getDataFileTimeOut(path, functionPass, pathPass) {
   try {
     // Read file json
-    let data: any = await readFile(path, 'utf-8');
+    let data: any = await readFile(`${FOLDER_FILE_JSON}/${path}`, 'utf-8');
     // Check if the json file urlDetailsWareHouse.json has data, if file no data -> get data in function crawlUrlWareHouse()
     if (Object.keys(data).length === 0 || data.constructor === Object) {
       data = await functionPass();
     } else {
       data = JSON.parse(data);
-      let urlPageProvinces: any = await readFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, 'utf-8');
-      urlPageProvinces = JSON.parse(urlPageProvinces);
-      const checkStatus = urlPageProvinces.find((url) => url.status === 0);
+      let dataTimeout: any = await readFile(`${FOLDER_FILE_JSON}/${pathPass}`, 'utf-8');
+      dataTimeout = JSON.parse(dataTimeout);
+      const checkStatus = dataTimeout.find((url) => url.status === 0);
       if (checkStatus) {
         data = await functionPass();
       }
