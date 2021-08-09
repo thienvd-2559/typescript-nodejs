@@ -174,6 +174,49 @@ async function detailWarehouses() {
         });
       });
 
+      // fee
+      const fee = {
+        key: '賃料',
+        value: null,
+      };
+      warehouse.push(fee);
+
+      // storyBelow
+      const storyBelow = {
+        key: '地下階数',
+        value: null,
+      };
+      warehouse.push(storyBelow);
+
+      // locationFloor
+      const locationFloor = {
+        key: '所在階',
+        value: null,
+      };
+      warehouse.push(locationFloor);
+
+      // commonFee
+      const commonFee = {
+        key: '共益費',
+        value: null,
+      };
+      warehouse.push(commonFee);
+
+      // isAvailable
+      const isAvailable = {
+        key: '今すぐ契約可能かどうか',
+        value: true,
+      };
+      warehouse.push(isAvailable);
+
+      // informationProvider
+      const informationProvider = {
+        key: '情報提供元',
+        value: null,
+      };
+      warehouse.push(informationProvider);
+
+      // sourcePath
       const sourcePath = {
         key: 'ソースパス',
         value: dataUrl.url,
@@ -185,27 +228,31 @@ async function detailWarehouses() {
       operator('#contents > div > div.columnSection.clearfix > div > div.bodySection > ul.icons > li').each(function () {
         warehouseEquipment.push(normalizeText(operator(this).text()));
       });
-      winston.info('array');
-      winston.info(warehouseEquipment);
       warehouse.push({
         key: '倉庫設備',
         value: warehouseEquipment,
       });
 
       // WarehouseAccess
-      const warehouseAccess = [];
-      const nearestInterchanges = [];
-      warehouseAccess.push({
-        key: 'nearestInterchanges',
-        value: nearestInterchanges,
-      });
+      const warehouseAccess = {
+        nearestStations: {
+          stationName: null,
+          transitMinute: null,
+          walkingMinute: null,
+        },
+        nearestInterchanges: {
+          highwayName: null,
+          interchangeName: null,
+          distanceKm: null,
+        },
+      };
       warehouse.push({
         key: '倉庫へのアクセス',
         value: warehouseAccess,
       });
 
       dataUrl.status = 1;
-      winston.info(warehouse);
+      // winston.info(warehouse);
 
       // TranslateFromJapaneseToEnglish
       const dataTranslate = warehouse.filter((data) => {
@@ -217,13 +264,28 @@ async function detailWarehouses() {
         }
       });
 
-      const customerData = {};
+      const customer: any = {};
       for (const data of dataTranslate) {
         const key = data.key;
         const value = data.value;
-        customerData[key] = value;
+        customer[key] = value;
       }
-      winston.info(customerData);
+      const customerData = {
+        name: customer.name,
+        fee: customer.fee,
+        area: customer.area,
+        storyAbove: customer.storyAbove,
+        storyBelow: customer.storyBelow,
+        locationFloor: customer.locationFloor,
+        commonFee: customer.commonFee,
+        equipments: customer.equipments,
+        isAvailable: customer.isAvailable,
+        informationProvider: customer.informationProvider,
+        access: customer.access,
+        sourcePath: customer.sourcePath,
+        address: customer.address,
+      };
+
       dataWarehouse.push(customerData);
 
       await fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`, JSON.stringify(dataWarehouse), (err) => {

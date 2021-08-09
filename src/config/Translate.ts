@@ -4,7 +4,7 @@ const TRANSLATE_FROM_JAPANESE_TO_ENGLISH = [
     value: 'name',
   },
   {
-    key: '',
+    key: '賃料',
     value: 'fee',
   },
   {
@@ -16,15 +16,15 @@ const TRANSLATE_FROM_JAPANESE_TO_ENGLISH = [
     value: 'storyAbove',
   },
   {
-    key: '',
+    key: '地下階数',
     value: 'storyBelow',
   },
   {
-    key: '',
+    key: '所在階',
     value: 'locationFloor',
   },
   {
-    key: '',
+    key: '共益費',
     value: 'commonFee',
   },
   {
@@ -32,11 +32,11 @@ const TRANSLATE_FROM_JAPANESE_TO_ENGLISH = [
     value: 'equipments',
   },
   {
-    key: '',
+    key: '今すぐ契約可能かどうか',
     value: 'isAvailable',
   },
   {
-    key: '',
+    key: '情報提供元',
     value: 'informationProvider',
   },
   {
