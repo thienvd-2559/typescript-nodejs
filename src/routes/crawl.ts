@@ -16,5 +16,6 @@ router.get('/warehouse-crawl-detail-page-province', WarehouseController.detailPr
 
 // crawl page province
 router.get('/crawl-detail-page-province', CrawlPageProvinceController.detailWarehouses);
+router.delete('/remove-folder-logs', CrawlPageProvinceController.removeFolderLogs);
 
 export default router;

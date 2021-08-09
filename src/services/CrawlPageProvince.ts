@@ -5,7 +5,7 @@ import { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, DETAILS_
 import { FOLDER_FILE_JSON, FILE_PROVINCES, FILE_URL_PROVINCES, FILE_URL_WAREHOUSE, FILE_DATA_WAREHOUSE, TIMEOUT_BETWEEN_REQUEST } from '../config/ConstFileJson';
 import { normalizeText } from '../utils/string';
 import fs from 'fs';
-import { readFile } from 'fs/promises';
+import fsPromises, { readFile } from 'fs/promises';
 import { TRANSLATE_FROM_JAPANESE_TO_ENGLISH } from '../config/Translate';
 
 async function crawlUrlProvinces() {
@@ -59,7 +59,6 @@ async function saveUrlProvinces() {
         continue;
       }
       const totalPage = await totalPages(province.url);
-      winston.info(totalPage);
       for (let k = 0; k < totalPage; k++) {
         const optionsPaging = {
           method: 'GET',
@@ -76,7 +75,6 @@ async function saveUrlProvinces() {
         });
         fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`, JSON.stringify(provinces), (err) => {
           if (err) throw err;
-          winston.info('update status = 1 done !');
         });
       }
     } catch (error) {
@@ -122,7 +120,6 @@ async function crawlUrlWareHouses() {
     });
     fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, JSON.stringify(urlProvinces), (err) => {
       if (err) throw err;
-      winston.info('update status = 1 done !');
     });
   }
 
@@ -137,7 +134,6 @@ async function detailWarehouses() {
     // read file dataWarehouse.json . If data file dataWarehouse = data file output.json, else dataWarehouse = []
     const dataFileWarehouse = await readFile(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`, 'utf-8');
     let dataWarehouse = [];
-    const dataVDT = [];
     if (Object.keys(dataFileWarehouse).length !== 0 && dataFileWarehouse.constructor !== Object) {
       dataWarehouse = JSON.parse(dataFileWarehouse);
     }
@@ -252,7 +248,6 @@ async function detailWarehouses() {
       });
 
       dataUrl.status = 1;
-      // winston.info(warehouse);
 
       // TranslateFromJapaneseToEnglish
       const dataTranslate = warehouse.filter((data) => {
@@ -294,7 +289,6 @@ async function detailWarehouses() {
       });
       await fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, JSON.stringify(dataUrlWareHouses), (err) => {
         if (err) throw err;
-        winston.info('update status = 1 done !');
       });
       await waitingTime();
       const dateTimeRequest = (Date.now() - timeStartCrawl) / 1000;
@@ -308,6 +302,10 @@ async function detailWarehouses() {
   } catch (error) {
     winston.info(error);
   }
+}
+
+async function removeFolderLogs() {
+  return await fsPromises.rmdir(FOLDER_FILE_JSON, { recursive: true });
 }
 
 async function totalPages(url) {
@@ -383,4 +381,4 @@ async function waitingTime() {
   });
 }
 
-export { detailWarehouses };
+export { detailWarehouses, removeFolderLogs };
