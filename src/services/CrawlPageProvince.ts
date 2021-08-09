@@ -6,6 +6,7 @@ import { FOLDER_FILE_JSON, FILE_PROVINCES, FILE_URL_PROVINCES, FILE_URL_WAREHOUS
 import { normalizeText } from '../utils/string';
 import fs from 'fs';
 import { readFile } from 'fs/promises';
+import { TRANSLATE_FROM_JAPANESE_TO_ENGLISH } from '../config/Translate';
 
 async function crawlUrlProvinces() {
   try {
@@ -136,6 +137,7 @@ async function detailWarehouses() {
     // read file dataWarehouse.json . If data file dataWarehouse = data file output.json, else dataWarehouse = []
     const dataFileWarehouse = await readFile(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`, 'utf-8');
     let dataWarehouse = [];
+    const dataVDT = [];
     if (Object.keys(dataFileWarehouse).length !== 0 && dataFileWarehouse.constructor !== Object) {
       dataWarehouse = JSON.parse(dataFileWarehouse);
     }
@@ -171,8 +173,59 @@ async function detailWarehouses() {
           value: normalizeText(operator(this).find('td').text()),
         });
       });
+
+      const sourcePath = {
+        key: 'ソースパス',
+        value: dataUrl.url,
+      };
+      warehouse.push(sourcePath);
+
+      // warehouseEquipment
+      const warehouseEquipment = [];
+      operator('#contents > div > div.columnSection.clearfix > div > div.bodySection > ul.icons > li').each(function () {
+        warehouseEquipment.push(normalizeText(operator(this).text()));
+      });
+      winston.info('array');
+      winston.info(warehouseEquipment);
+      warehouse.push({
+        key: '倉庫設備',
+        value: warehouseEquipment,
+      });
+
+      // WarehouseAccess
+      const warehouseAccess = [];
+      const nearestInterchanges = [];
+      warehouseAccess.push({
+        key: 'nearestInterchanges',
+        value: nearestInterchanges,
+      });
+      warehouse.push({
+        key: '倉庫へのアクセス',
+        value: warehouseAccess,
+      });
+
       dataUrl.status = 1;
-      dataWarehouse.push(warehouse);
+      winston.info(warehouse);
+
+      // TranslateFromJapaneseToEnglish
+      const dataTranslate = warehouse.filter((data) => {
+        for (const translate of TRANSLATE_FROM_JAPANESE_TO_ENGLISH) {
+          if (data.key === translate.key) {
+            data.key = translate.value;
+            return data;
+          }
+        }
+      });
+
+      const customerData = {};
+      for (const data of dataTranslate) {
+        const key = data.key;
+        const value = data.value;
+        customerData[key] = value;
+      }
+      winston.info(customerData);
+      dataWarehouse.push(customerData);
+
       await fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`, JSON.stringify(dataWarehouse), (err) => {
         if (err) throw err;
         winston.info('save data detail ware house done !');
