@@ -2,11 +2,15 @@ import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
 import { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, DETAILS_WAREHOUSE } from '../config/WarehouseCrawlDataConfig';
-import { FOLDER_FILE_JSON, FILE_PROVINCES, FILE_URL_PROVINCES, FILE_URL_WAREHOUSE, FILE_DATA_WAREHOUSE, TIMEOUT_BETWEEN_REQUEST } from '../config/ConstFileJson';
+import { FOLDER_FILE_JSON, FILE_PROVINCES, FILE_URL_PROVINCES, FILE_URL_WAREHOUSE, FILE_DATA_WAREHOUSE, TIMEOUT_BETWEEN_REQUEST, FILE_STATUS_CRAWL, FOLDER_FILE_STATUS_CRAWL } from '../config/ConstFileJson';
 import { normalizeText } from '../utils/string';
 import fs from 'fs';
-import fsPromises, { readFile } from 'fs/promises';
+import fsPromises, { readFile, writeFile } from 'fs/promises';
 import { TRANSLATE_FROM_JAPANESE_TO_ENGLISH } from '../config/Translate';
+
+let statusCrawl = 'OFF';
+createFolder(FOLDER_FILE_STATUS_CRAWL);
+writeFile(`${FOLDER_FILE_STATUS_CRAWL}/${FILE_STATUS_CRAWL}`, statusCrawl);
 
 async function crawlUrlProvinces() {
   try {
@@ -30,12 +34,7 @@ async function crawlUrlProvinces() {
           }
         });
     });
-
-    fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`, JSON.stringify(urlProvinces), (err) => {
-      if (err) throw err;
-      winston.info(`save provinces done !`);
-    });
-
+    writeFile(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`, JSON.stringify(urlProvinces));
     winston.info('[crawl success data url provinces]');
 
     return urlProvinces;
@@ -48,7 +47,7 @@ async function saveUrlProvinces() {
   let urlProvince = [];
   await createPath(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`);
   const provinces = await getDataFileNotTimeOut(`${FILE_PROVINCES}`, crawlUrlProvinces);
-  const dataFileUrlProvince = await readFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, 'utf-8');
+  const dataFileUrlProvince = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`);
   if (Object.keys(dataFileUrlProvince).length !== 0 && dataFileUrlProvince.constructor !== Object) {
     urlProvince = JSON.parse(dataFileUrlProvince);
   }
@@ -69,13 +68,11 @@ async function saveUrlProvinces() {
           status: 0,
         });
         province.status = 1;
-        fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, JSON.stringify(urlProvince), (err) => {
-          if (err) throw err;
-          winston.info(`save url ${optionsPaging.uri} done !`);
-        });
-        fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`, JSON.stringify(provinces), (err) => {
-          if (err) throw err;
-        });
+
+        writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, JSON.stringify(urlProvince));
+        winston.info(`save url ${optionsPaging.uri} done !`);
+
+        writeFile(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`, JSON.stringify(provinces));
       }
     } catch (error) {
       winston.info(error);
@@ -86,11 +83,11 @@ async function saveUrlProvinces() {
 }
 
 async function crawlUrlWareHouses() {
+  winston.info('[start crawl url warehouse]');
   let urlWarehouse = [];
   await createPath(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`);
   const urlProvinces = await getDataFileTimeOut(`${FILE_URL_PROVINCES}`, saveUrlProvinces, FILE_PROVINCES);
-
-  const dataFileUrlWarehouse = await readFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, 'utf-8');
+  const dataFileUrlWarehouse = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
 
   if (Object.keys(dataFileUrlWarehouse).length !== 0 && dataFileUrlWarehouse.constructor !== Object) {
     urlWarehouse = JSON.parse(dataFileUrlWarehouse);
@@ -114,13 +111,11 @@ async function crawlUrlWareHouses() {
       });
     });
     province.status = 1;
-    fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, JSON.stringify(urlWarehouse), (err) => {
-      if (err) throw err;
-      winston.info(`save url ${optionsPaging.uri} done !`);
-    });
-    fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, JSON.stringify(urlProvinces), (err) => {
-      if (err) throw err;
-    });
+
+    writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, JSON.stringify(urlWarehouse));
+    winston.info(`save url warehouse: ${optionsPaging.uri} done !`);
+
+    writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, JSON.stringify(urlProvinces));
   }
 
   return urlWarehouse;
@@ -128,11 +123,14 @@ async function crawlUrlWareHouses() {
 
 async function detailWarehouses() {
   try {
+    winston.info('[start crawl detail warehouse]');
+    statusCrawl = 'ON';
+
     createFolder(FOLDER_FILE_JSON);
     createPath(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`);
 
     // read file dataWarehouse.json . If data file dataWarehouse = data file output.json, else dataWarehouse = []
-    const dataFileWarehouse = await readFile(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`, 'utf-8');
+    const dataFileWarehouse = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`);
     let dataWarehouse = [];
     if (Object.keys(dataFileWarehouse).length !== 0 && dataFileWarehouse.constructor !== Object) {
       dataWarehouse = JSON.parse(dataFileWarehouse);
@@ -283,13 +281,9 @@ async function detailWarehouses() {
 
       dataWarehouse.push(customerData);
 
-      await fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`, JSON.stringify(dataWarehouse), (err) => {
-        if (err) throw err;
-        winston.info('save data detail ware house done !');
-      });
-      await fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, JSON.stringify(dataUrlWareHouses), (err) => {
-        if (err) throw err;
-      });
+      await writeFile(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`, JSON.stringify(dataWarehouse));
+
+      await writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, JSON.stringify(dataUrlWareHouses));
       await waitingTime();
       const dateTimeRequest = (Date.now() - timeStartCrawl) / 1000;
       winston.info({
@@ -298,14 +292,29 @@ async function detailWarehouses() {
     }
     winston.info('[crawl success data details ware house]');
 
-    return dataWarehouse;
+    statusCrawl = 'OFF';
+    fs.writeFile(`${FOLDER_FILE_STATUS_CRAWL}/${FILE_STATUS_CRAWL}`, statusCrawl, (err) => {
+      if (err) throw err;
+    });
+
+    return [dataWarehouse];
   } catch (error) {
     winston.info(error);
   }
 }
 
-async function removeFolderLogs() {
-  return await fsPromises.rmdir(FOLDER_FILE_JSON, { recursive: true });
+async function removeFolderLogs(req, res, next) {
+  try {
+    const data: any = await readDataFile(`${FOLDER_FILE_STATUS_CRAWL}/${FILE_STATUS_CRAWL}`);
+    if (data === 'ON') {
+      return 'data is crawling, cannot be deleted !';
+    } else {
+      await fsPromises.rmdir(FOLDER_FILE_JSON, { recursive: true });
+      return 'successful delete';
+    }
+  } catch (error) {
+    return 'has a error, please check back data file';
+  }
 }
 
 async function totalPages(url) {
@@ -336,9 +345,13 @@ function createPath(path) {
   }
 }
 
+async function readDataFile(path) {
+  return readFile(path, 'utf-8');
+}
+
 async function getDataFileNotTimeOut(path, functionPass) {
   // Read file json
-  let data: any = await readFile(`${FOLDER_FILE_JSON}/${path}`, 'utf-8');
+  let data: any = await readDataFile(`${FOLDER_FILE_JSON}/${path}`);
   // Check if the json file urlDetailsWareHouse.json has data, if file no data -> get data in function crawlUrlWareHouse()
   if (Object.keys(data).length === 0 || data.constructor === Object) {
     data = await functionPass();
@@ -352,13 +365,13 @@ async function getDataFileNotTimeOut(path, functionPass) {
 async function getDataFileTimeOut(path, functionPass, pathPass) {
   try {
     // Read file json
-    let data: any = await readFile(`${FOLDER_FILE_JSON}/${path}`, 'utf-8');
+    let data: any = await readDataFile(`${FOLDER_FILE_JSON}/${path}`);
     // Check if the json file urlDetailsWareHouse.json has data, if file no data -> get data in function crawlUrlWareHouse()
     if (Object.keys(data).length === 0 || data.constructor === Object) {
       data = await functionPass();
     } else {
       data = JSON.parse(data);
-      let dataTimeout: any = await readFile(`${FOLDER_FILE_JSON}/${pathPass}`, 'utf-8');
+      let dataTimeout: any = await readDataFile(`${FOLDER_FILE_JSON}/${pathPass}`);
       dataTimeout = JSON.parse(dataTimeout);
       const checkStatus = dataTimeout.find((url) => url.status === 0);
       if (checkStatus) {
