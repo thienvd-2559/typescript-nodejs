@@ -2,9 +2,10 @@ import { detailWarehouses, removeFolderLogs, readDataFile } from '../services/Cr
 import { FOLDER_FILE_JSON, FILE_STATUS_CRAWL } from '../config/ConstFileJson';
 import { writeFile } from 'fs/promises';
 import fs from 'fs';
+
+let statusCrawl = 'OFF';
 export default class CrawlPageProvinceController {
   public static async detailWarehouses(req, res, next): Promise<any> {
-    let statusCrawl = 'OFF';
     // Check if there is data, if not, then go with OFF
     if (!fs.existsSync(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`)) {
       fs.writeFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`, statusCrawl, (err) => {
@@ -16,27 +17,27 @@ export default class CrawlPageProvinceController {
     const status: any = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`);
     if (status === 'ON') {
       return res.json({
-        data: 'data is being crawled',
+        data: 'Data is being crawled, please wait until the crawl is complete',
       });
     } else {
       statusCrawl = 'ON';
       writeFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`, statusCrawl);
       detailWarehouses(statusCrawl);
       return res.json({
-        data: 'data crawl success',
+        data: 'Start crawling',
       });
     }
   }
 
   public static async removeFolderLogs(req, res, next): Promise<any> {
     try {
-      const statusCrawl: any = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`);
-      if (statusCrawl === 'ON') {
+      const data: any = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`);
+      if (data === 'ON') {
         return res.json({
           message: 'Data is crawling, Cannot be deleted !',
         });
       } else {
-        removeFolderLogs();
+        await removeFolderLogs();
         return res.json({
           message: 'successful delete',
         });
