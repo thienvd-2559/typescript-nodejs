@@ -2,15 +2,11 @@ import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
 import { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, DETAILS_WAREHOUSE } from '../config/WarehouseCrawlDataConfig';
-import { FOLDER_FILE_JSON, FILE_PROVINCES, FILE_URL_PROVINCES, FILE_URL_WAREHOUSE, FILE_DATA_WAREHOUSE, TIMEOUT_BETWEEN_REQUEST, FILE_STATUS_CRAWL, FOLDER_FILE_STATUS_CRAWL } from '../config/ConstFileJson';
+import { FOLDER_FILE_JSON, FILE_PROVINCES, FILE_URL_PROVINCES, FILE_URL_WAREHOUSE, FILE_DATA_WAREHOUSE, TIMEOUT_BETWEEN_REQUEST } from '../config/ConstFileJson';
 import { normalizeText } from '../utils/string';
 import fs from 'fs';
 import fsPromises, { readFile, writeFile } from 'fs/promises';
 import { TRANSLATE_FROM_JAPANESE_TO_ENGLISH } from '../config/Translate';
-
-let statusCrawl = 'OFF';
-createFolder(FOLDER_FILE_STATUS_CRAWL);
-writeFile(`${FOLDER_FILE_STATUS_CRAWL}/${FILE_STATUS_CRAWL}`, statusCrawl);
 
 async function crawlUrlProvinces() {
   try {
@@ -121,11 +117,9 @@ async function crawlUrlWareHouses() {
   return urlWarehouse;
 }
 
-async function detailWarehouses() {
+async function detailWarehouses(statusCrawl) {
   try {
     winston.info('[start crawl detail warehouse]');
-    statusCrawl = 'ON';
-
     createFolder(FOLDER_FILE_JSON);
     createPath(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`);
 
@@ -290,12 +284,9 @@ async function detailWarehouses() {
         'Request time': dateTimeRequest,
       });
     }
-    winston.info('[crawl success data details ware house]');
-
+    // Check if the file has been crawled or not, if crawled, turn it OFF
     statusCrawl = 'OFF';
-    fs.writeFile(`${FOLDER_FILE_STATUS_CRAWL}/${FILE_STATUS_CRAWL}`, statusCrawl, (err) => {
-      if (err) throw err;
-    });
+    winston.info('[crawl success data details ware house]');
 
     return [dataWarehouse];
   } catch (error) {
@@ -303,18 +294,11 @@ async function detailWarehouses() {
   }
 }
 
-async function removeFolderLogs(req, res, next) {
-  try {
-    const data: any = await readDataFile(`${FOLDER_FILE_STATUS_CRAWL}/${FILE_STATUS_CRAWL}`);
-    if (data === 'ON') {
-      return 'data is crawling, cannot be deleted !';
-    } else {
-      await fsPromises.rmdir(FOLDER_FILE_JSON, { recursive: true });
-      return 'successful delete';
-    }
-  } catch (error) {
-    return 'has a error, please check back data file';
-  }
+async function removeFolderLogs() {
+  removeFile(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`);
+  removeFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`);
+  removeFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
+  removeFile(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`);
 }
 
 async function totalPages(url) {
@@ -332,6 +316,12 @@ async function totalPages(url) {
 function createFolder(folder) {
   if (!fs.existsSync(folder)) {
     fs.mkdirSync(folder);
+  }
+}
+
+async function removeFile(path) {
+  if (fs.existsSync(path)) {
+    return fsPromises.unlink(path);
   }
 }
 
@@ -394,4 +384,4 @@ async function waitingTime() {
   });
 }
 
-export { detailWarehouses, removeFolderLogs };
+export { detailWarehouses, removeFolderLogs, readDataFile, createPath };
