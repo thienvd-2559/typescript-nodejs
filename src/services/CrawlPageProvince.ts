@@ -2,10 +2,10 @@ import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
 import { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, DETAILS_WAREHOUSE } from '../config/WarehouseCrawlDataConfig';
-import { FOLDER_FILE_JSON, FILE_PROVINCES, FILE_URL_PROVINCES, FILE_URL_WAREHOUSE, FILE_DATA_WAREHOUSE, TIMEOUT_BETWEEN_REQUEST } from '../config/ConstFileJson';
+import { FOLDER_FILE_JSON, FILE_PROVINCES, FILE_URL_PROVINCES, FILE_URL_WAREHOUSE, FILE_DATA_WAREHOUSE, TIMEOUT_BETWEEN_REQUEST, FILE_STATUS_CRAWL } from '../config/ConstFileJson';
 import { normalizeText } from '../utils/string';
 import fs from 'fs';
-import fsPromises, { readFile, writeFile } from 'fs/promises';
+import fsPromises, { readFile, writeFile, unlink, mkdir } from 'fs/promises';
 import { TRANSLATE_FROM_JAPANESE_TO_ENGLISH } from '../config/Translate';
 
 async function crawlUrlProvinces() {
@@ -286,6 +286,7 @@ async function detailWarehouses(statusCrawl) {
     }
     // Check if the file has been crawled or not, if crawled, turn it OFF
     statusCrawl = 'OFF';
+    writeFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`, statusCrawl);
     winston.info('[crawl success data details ware house]');
 
     return [dataWarehouse];
@@ -313,15 +314,15 @@ async function totalPages(url) {
   return pages === '' ? 1 : Number(pages);
 }
 
-function createFolder(folder) {
+async function createFolder(folder) {
   if (!fs.existsSync(folder)) {
-    fs.mkdirSync(folder);
+    mkdir(folder);
   }
 }
 
 async function removeFile(path) {
   if (fs.existsSync(path)) {
-    return fsPromises.unlink(path);
+    return unlink(path);
   }
 }
 
@@ -329,9 +330,7 @@ function createPath(path) {
   // Check if the file exists or not
   if (!fs.existsSync(path)) {
     // Create file;
-    fs.writeFile(path, '', (err) => {
-      if (err) throw err;
-    });
+    writeFile(path, '');
   }
 }
 
