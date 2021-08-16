@@ -3,54 +3,70 @@ import { FOLDER_FILE_JSON, FILE_STATUS_CRAWL, FILE_URL_WAREHOUSE } from '../conf
 import { writeFile } from 'fs/promises';
 import fs from 'fs';
 import winston from '../config/winston';
+import moment from 'moment';
 
 let statusCrawl = 'OFF';
+const dateTime = moment().format('DD/MM/YYYY, HH:MM:SS ');
 export default class CrawlPageProvinceController {
   public static async detailWarehouses(req, res, next): Promise<any> {
-    if (!fs.existsSync(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`)) {
-      writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, '');
-    }
-    // Check if there is data, if not, then go with OFF
-    if (!fs.existsSync(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`)) {
-      writeFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`, statusCrawl);
-    }
-    // Read file
-    const status: any = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`);
-    if (status === 'ON') {
-      let urlWarehouse: any = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
-      if (urlWarehouse.length === 0) {
-        return res.json({
-          message: 'Data is being crawled, please wait until the crawl is complete',
-        });
+    try {
+      if (!fs.existsSync(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`)) {
+        await writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, '');
       }
-      urlWarehouse = JSON.parse(urlWarehouse);
-      const result = urlWarehouse.filter((url) => url.status !== 1);
-      if (result.length === 0) {
-        statusCrawl = 'OFF';
+      // Check if there is data, if not, then go with OFF
+      if (!fs.existsSync(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`)) {
         await writeFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`, statusCrawl);
-        return res.json({
-          message: 'Crawling data success',
-        });
       }
-      return res.json({
-        message: 'Data is being crawled, please wait until the crawl is complete',
-      });
-    } else {
-      statusCrawl = 'ON';
-      writeFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`, statusCrawl);
-      const dataFileWarehouse = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
-      if (dataFileWarehouse === '') {
-        detailWarehouses(statusCrawl);
+      // Read file
+      const status: any = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`);
+      if (status === 'ON') {
+        let urlWarehouse: any = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
+        if (urlWarehouse.length === 0) {
+          return res.json({
+            message: `Crawling is in progress. Please wait until it is completed`,
+          });
+        }
+        urlWarehouse = JSON.parse(urlWarehouse);
+        const result = urlWarehouse.filter((url) => url.status === 0);
+        if (result.length === 0) {
+          statusCrawl = 'OFF';
+          await writeFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`, statusCrawl);
+          return res.json({
+            message: `Started crawling from ${dateTime} `,
+          });
+        }
         return res.json({
-          message: 'Start crawling',
+          message: `Crawling is in progress. Please wait until it is completed`,
         });
       } else {
-        statusCrawl = 'OFF';
-        writeFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`, statusCrawl);
-        return res.json({
-          message: 'Crawling data success',
-        });
+        statusCrawl = 'ON';
+        await writeFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`, statusCrawl);
+        let urlWarehouse: any = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
+        if (urlWarehouse.length === 0) {
+          detailWarehouses(statusCrawl);
+          return res.json({
+            message: `Started crawling from ${dateTime} `,
+          });
+        }
+        urlWarehouse = JSON.parse(urlWarehouse);
+        const result = urlWarehouse.filter((url) => url.status === 0);
+        if (result.length === 0) {
+          statusCrawl = 'OFF';
+          await writeFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`, statusCrawl);
+          return res.json({
+            message: `Crawling from ${dateTime} has been completed. Please run the delete command before continuing to crawl`,
+          });
+        } else {
+          detailWarehouses(statusCrawl);
+          return res.json({
+            message: `Started crawling from ${dateTime}`,
+          });
+        }
       }
+    } catch (error) {
+      return res.json({
+        message: error,
+      });
     }
   }
 
@@ -64,7 +80,7 @@ export default class CrawlPageProvinceController {
       } else {
         await removeFolderLogs();
         return res.json({
-          message: 'successful delete',
+          message: 'Successfully deleted',
         });
       }
     } catch (err) {
