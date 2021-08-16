@@ -120,7 +120,6 @@ async function crawlUrlWareHouses() {
 async function detailWarehouses(statusCrawl) {
   try {
     winston.info('[start crawl detail warehouse]');
-    createFolder(FOLDER_FILE_JSON);
     createPath(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`);
 
     // read file dataWarehouse.json . If data file dataWarehouse = data file output.json, else dataWarehouse = []
@@ -383,4 +382,4 @@ async function waitingTime() {
   });
 }
 
-export { detailWarehouses, removeFolderLogs, readDataFile, createPath };
+export { detailWarehouses, removeFolderLogs, readDataFile, createPath, createFolder };

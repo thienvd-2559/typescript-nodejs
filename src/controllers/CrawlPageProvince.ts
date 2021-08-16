@@ -1,4 +1,4 @@
-import { detailWarehouses, removeFolderLogs, readDataFile } from '../services/CrawlPageProvince';
+import { detailWarehouses, removeFolderLogs, readDataFile, createFolder } from '../services/CrawlPageProvince';
 import { FOLDER_FILE_JSON, FILE_STATUS_CRAWL, FILE_URL_WAREHOUSE } from '../config/ConstFileJson';
 import { writeFile } from 'fs/promises';
 import fs from 'fs';
@@ -6,10 +6,11 @@ import winston from '../config/winston';
 import moment from 'moment';
 
 let statusCrawl = 'OFF';
-const dateTime = moment().format('DD/MM/YYYY, HH:MM:SS ');
+const dateTime = moment().format('DD/MM/YYYY, HH:mm:ss ');
 export default class CrawlPageProvinceController {
   public static async detailWarehouses(req, res, next): Promise<any> {
     try {
+      createFolder(FOLDER_FILE_JSON);
       if (!fs.existsSync(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`)) {
         await writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, '');
       }
@@ -18,14 +19,15 @@ export default class CrawlPageProvinceController {
         await writeFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`, statusCrawl);
       }
       // Read file
-      const status: any = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`);
-      if (status === 'ON') {
+      const getFileStatusCrawl: any = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`);
+      if (getFileStatusCrawl === 'ON') {
         let urlWarehouse: any = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
         if (urlWarehouse.length === 0) {
           return res.json({
             message: `Crawling is in progress. Please wait until it is completed`,
           });
         }
+
         urlWarehouse = JSON.parse(urlWarehouse);
         const result = urlWarehouse.filter((url) => url.status === 0);
         if (result.length === 0) {
@@ -35,6 +37,7 @@ export default class CrawlPageProvinceController {
             message: `Started crawling from ${dateTime} `,
           });
         }
+
         return res.json({
           message: `Crawling is in progress. Please wait until it is completed`,
         });
@@ -48,20 +51,22 @@ export default class CrawlPageProvinceController {
             message: `Started crawling from ${dateTime} `,
           });
         }
+
         urlWarehouse = JSON.parse(urlWarehouse);
         const result = urlWarehouse.filter((url) => url.status === 0);
         if (result.length === 0) {
           statusCrawl = 'OFF';
           await writeFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`, statusCrawl);
+
           return res.json({
             message: `Crawling from ${dateTime} has been completed. Please run the delete command before continuing to crawl`,
           });
-        } else {
-          detailWarehouses(statusCrawl);
-          return res.json({
-            message: `Started crawling from ${dateTime}`,
-          });
         }
+
+        detailWarehouses(statusCrawl);
+        return res.json({
+          message: `Started crawling from ${dateTime}`,
+        });
       }
     } catch (error) {
       return res.json({
