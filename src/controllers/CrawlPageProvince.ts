@@ -2,7 +2,6 @@ import { detailWarehouses, removeFolderLogs, readDataFile, createFolder } from '
 import { FOLDER_FILE_JSON, FILE_STATUS_CRAWL, FILE_URL_WAREHOUSE } from '../config/ConstFileJson';
 import { writeFile } from 'fs/promises';
 import fs from 'fs';
-import winston from '../config/winston';
 import moment from 'moment';
 
 let statusCrawl = 'OFF';
@@ -88,6 +87,26 @@ export default class CrawlPageProvinceController {
           message: 'Successfully deleted',
         });
       }
+    } catch (err) {
+      return res.json({
+        message: 'Has a error, Please check back data file',
+      });
+    }
+  }
+
+  public static async resetFolderLogs(req, res, next): Promise<any> {
+    try {
+      const data: any = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`);
+      // if (data === 'ON') {
+      //   return res.json({
+      //     message: 'Data is crawling, Cannot be deleted !',
+      //   });
+      // } else {
+      //   await removeFolderLogs();
+      //   return res.json({
+      //     message: 'Successfully deleted',
+      //   });
+      // }
     } catch (err) {
       return res.json({
         message: 'Has a error, Please check back data file',

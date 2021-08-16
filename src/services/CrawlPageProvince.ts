@@ -30,7 +30,7 @@ async function crawlUrlProvinces() {
           }
         });
     });
-    writeFile(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`, JSON.stringify(urlProvinces));
+    await writeFile(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`, JSON.stringify(urlProvinces));
     winston.info('[crawl success data url provinces]');
 
     return urlProvinces;
@@ -65,10 +65,10 @@ async function saveUrlProvinces() {
         });
         province.status = 1;
 
-        writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, JSON.stringify(urlProvince));
+        await writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, JSON.stringify(urlProvince));
         winston.info(`save url ${optionsPaging.uri} done !`);
 
-        writeFile(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`, JSON.stringify(provinces));
+        await writeFile(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`, JSON.stringify(provinces));
       }
     } catch (error) {
       winston.info(error);
@@ -108,10 +108,10 @@ async function crawlUrlWareHouses() {
     });
     province.status = 1;
 
-    writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, JSON.stringify(urlWarehouse));
+    await writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, JSON.stringify(urlWarehouse));
     winston.info(`save url warehouse: ${optionsPaging.uri} done !`);
 
-    writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, JSON.stringify(urlProvinces));
+    await writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`, JSON.stringify(urlProvinces));
   }
 
   return urlWarehouse;
@@ -120,7 +120,7 @@ async function crawlUrlWareHouses() {
 async function detailWarehouses(statusCrawl) {
   try {
     winston.info('[start crawl detail warehouse]');
-    createPath(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`);
+    await createPath(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`);
 
     // read file dataWarehouse.json . If data file dataWarehouse = data file output.json, else dataWarehouse = []
     const dataFileWarehouse = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`);
@@ -285,13 +285,17 @@ async function detailWarehouses(statusCrawl) {
     }
     // Check if the file has been crawled or not, if crawled, turn it OFF
     statusCrawl = 'OFF';
-    writeFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`, statusCrawl);
+    await writeFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`, statusCrawl);
     winston.info('[crawl success data details ware house]');
 
     return [dataWarehouse];
   } catch (error) {
     winston.info(error);
   }
+}
+
+async function resetFolderLogs() {
+  createFolder(`eck`);
 }
 
 async function removeFolderLogs() {
@@ -325,7 +329,7 @@ async function removeFile(path) {
   }
 }
 
-function createPath(path) {
+async function createPath(path) {
   // Check if the file exists or not
   if (!fs.existsSync(path)) {
     // Create file;
