@@ -82,6 +82,7 @@ async function crawlUrlWareHouses() {
   winston.info('[start crawl url warehouse]');
   let urlWarehouse = [];
   await createPath(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`);
+  winston.info('aaaaaa');
   const urlProvinces = await getDataFileTimeOut(`${FILE_URL_PROVINCES}`, saveUrlProvinces, FILE_PROVINCES);
   const dataFileUrlWarehouse = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
 
@@ -130,6 +131,8 @@ async function detailWarehouses(statusCrawl) {
     }
 
     await createPath(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
+    // await createPath(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`);
+    // winston.info('1111', await createPath(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`));
     const dataUrlWareHouses = await getDataFileTimeOut(`${FILE_URL_WAREHOUSE}`, crawlUrlWareHouses, FILE_URL_PROVINCES);
 
     for (const dataUrl of dataUrlWareHouses) {
@@ -338,7 +341,11 @@ async function createPath(path) {
 }
 
 async function readDataFile(path) {
-  return readFile(path, 'utf-8');
+  if (fs.existsSync(path)) {
+    return readFile(path, 'utf-8');
+  } else {
+    winston.info(`File ${path} not exit`);
+  }
 }
 
 async function getDataFileNotTimeOut(path, functionPass) {
@@ -358,9 +365,11 @@ async function getDataFileTimeOut(path, functionPass, pathPass) {
   try {
     // Read file json
     let data: any = await readDataFile(`${FOLDER_FILE_JSON}/${path}`);
+    winston.info('55555', data);
     // Check if the json file urlDetailsWareHouse.json has data, if file no data -> get data in function crawlUrlWareHouse()
     if (Object.keys(data).length === 0 || data.constructor === Object) {
       data = await functionPass();
+      winston.info('6666', data);
     } else {
       data = JSON.parse(data);
       let dataTimeout: any = await readDataFile(`${FOLDER_FILE_JSON}/${pathPass}`);
