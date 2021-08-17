@@ -9,7 +9,7 @@ const dateTime = moment().format('DD/MM/YYYY, HH:mm:ss ');
 export default class CrawlPageProvinceController {
   public static async detailWarehouses(req, res, next): Promise<any> {
     try {
-      createFolder(FOLDER_FILE_JSON);
+      await createFolder(FOLDER_FILE_JSON);
       if (!fs.existsSync(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`)) {
         await writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, '');
       }

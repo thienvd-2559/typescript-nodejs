@@ -129,7 +129,7 @@ async function detailWarehouses(statusCrawl) {
       dataWarehouse = JSON.parse(dataFileWarehouse);
     }
 
-    createPath(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
+    await createPath(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
     const dataUrlWareHouses = await getDataFileTimeOut(`${FILE_URL_WAREHOUSE}`, crawlUrlWareHouses, FILE_URL_PROVINCES);
 
     for (const dataUrl of dataUrlWareHouses) {
