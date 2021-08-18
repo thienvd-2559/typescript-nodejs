@@ -3,7 +3,7 @@ const FILE_PROVINCES = 'provinces.json';
 const FILE_URL_PROVINCES = 'urlProvinces.json';
 const FILE_URL_WAREHOUSE = 'urlWarehouse.json';
 const FILE_DATA_WAREHOUSE = 'dataWarehouse.json';
-const TIMEOUT_BETWEEN_REQUEST = 0; // TIMEOUT = 0.5 (s)F
+const TIMEOUT_BETWEEN_REQUEST = 0; // unit of time: ms
 const FILE_STATUS_CRAWL = 'statusCrawl.txt';
 const FILE_TIME = 'time.txt';
 

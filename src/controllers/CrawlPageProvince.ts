@@ -55,7 +55,7 @@ export default class CrawlPageProvinceController {
           detailWarehouses(statusCrawl);
           dateTime = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_TIME}`);
           return res.json({
-            message: `Started crawling from ${dateTime} `,
+            message: `Started crawling from ${dateTime}`,
           });
         }
 
@@ -87,8 +87,9 @@ export default class CrawlPageProvinceController {
     try {
       const data: any = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`);
       if (data === 'ON') {
+        const dateTime = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_TIME}`);
         return res.json({
-          message: 'Data is crawling, Cannot be deleted !',
+          message: `Crawling from ${dateTime} is in progress. Please wait until it is completed`,
         });
       } else {
         await removeFolderLogs();
