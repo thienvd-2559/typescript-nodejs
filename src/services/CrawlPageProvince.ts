@@ -294,11 +294,7 @@ async function detailWarehouses(statusCrawl) {
   }
 }
 
-async function resetFolderLogs() {
-  createFolder(`eck`);
-}
-
-async function removeFolderLogs() {
+function removeFolderLogs() {
   removeFile(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`);
   removeFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`);
   removeFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
@@ -319,13 +315,13 @@ async function totalPages(url) {
 
 async function createFolder(folder) {
   if (!fs.existsSync(folder)) {
-    mkdir(folder);
+    await mkdir(folder);
   }
 }
 
 async function removeFile(path) {
   if (fs.existsSync(path)) {
-    return unlink(path);
+    return await unlink(path);
   }
 }
 
@@ -333,7 +329,7 @@ async function createPath(path) {
   // Check if the file exists or not
   if (!fs.existsSync(path)) {
     // Create file;
-    writeFile(path, '');
+    await writeFile(path, '');
   }
 }
 
