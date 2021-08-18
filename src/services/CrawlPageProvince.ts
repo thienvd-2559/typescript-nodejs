@@ -82,7 +82,6 @@ async function crawlUrlWareHouses() {
   winston.info('[start crawl url warehouse]');
   let urlWarehouse = [];
   await createPath(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`);
-  winston.info('aaaaaa');
   const urlProvinces = await getDataFileTimeOut(`${FILE_URL_PROVINCES}`, saveUrlProvinces, FILE_PROVINCES);
   const dataFileUrlWarehouse = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
 
@@ -361,7 +360,6 @@ async function getDataFileTimeOut(path, functionPass, pathPass) {
   try {
     // Read file json
     let data: any = await readDataFile(`${FOLDER_FILE_JSON}/${path}`);
-    winston.info('55555', data);
     // Check if the json file urlDetailsWareHouse.json has data, if file no data -> get data in function crawlUrlWareHouse()
     if (Object.keys(data).length === 0 || data.constructor === Object) {
       data = await functionPass();
