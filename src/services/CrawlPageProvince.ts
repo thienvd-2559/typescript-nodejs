@@ -7,6 +7,7 @@ import { normalizeText } from '../utils/string';
 import fs from 'fs';
 import fsPromises, { readFile, writeFile, unlink, mkdir } from 'fs/promises';
 import { TRANSLATE_FROM_JAPANESE_TO_ENGLISH } from '../config/Translate';
+import moment from 'moment';
 
 async function crawlUrlProvinces() {
   try {
@@ -41,9 +42,9 @@ async function crawlUrlProvinces() {
 
 async function saveUrlProvinces() {
   let urlProvince = [];
-  await createPath(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`);
+  await createFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`);
   const provinces = await getDataFileNotTimeOut(`${FILE_PROVINCES}`, crawlUrlProvinces);
-  const dataFileUrlProvince = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`);
+  const dataFileUrlProvince = await readDataFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`);
   if (Object.keys(dataFileUrlProvince).length !== 0 && dataFileUrlProvince.constructor !== Object) {
     urlProvince = JSON.parse(dataFileUrlProvince);
   }
@@ -81,9 +82,9 @@ async function saveUrlProvinces() {
 async function crawlUrlWareHouses() {
   winston.info('[start crawl url warehouse]');
   let urlWarehouse = [];
-  await createPath(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`);
+  await createFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`);
   const urlProvinces = await getDataFileTimeOut(`${FILE_URL_PROVINCES}`, saveUrlProvinces, FILE_PROVINCES);
-  const dataFileUrlWarehouse = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
+  const dataFileUrlWarehouse = await readDataFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
 
   if (Object.keys(dataFileUrlWarehouse).length !== 0 && dataFileUrlWarehouse.constructor !== Object) {
     urlWarehouse = JSON.parse(dataFileUrlWarehouse);
@@ -120,18 +121,16 @@ async function crawlUrlWareHouses() {
 async function detailWarehouses(statusCrawl) {
   try {
     winston.info('[start crawl detail warehouse]');
-    await createPath(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`);
+    await createFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`);
 
     // read file dataWarehouse.json . If data file dataWarehouse = data file output.json, else dataWarehouse = []
-    const dataFileWarehouse = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`);
+    const dataFileWarehouse = await readDataFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`);
     let dataWarehouse = [];
     if (Object.keys(dataFileWarehouse).length !== 0 && dataFileWarehouse.constructor !== Object) {
       dataWarehouse = JSON.parse(dataFileWarehouse);
     }
 
-    await createPath(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
-    // await createPath(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`);
-    // winston.info('1111', await createPath(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`));
+    await createFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
     const dataUrlWareHouses = await getDataFileTimeOut(`${FILE_URL_WAREHOUSE}`, crawlUrlWareHouses, FILE_URL_PROVINCES);
 
     for (const dataUrl of dataUrlWareHouses) {
@@ -281,9 +280,7 @@ async function detailWarehouses(statusCrawl) {
       await writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, JSON.stringify(dataUrlWareHouses));
       await waitingTime();
       const dateTimeRequest = (Date.now() - timeStartCrawl) / 1000;
-      winston.info({
-        'Request time': dateTimeRequest,
-      });
+      winston.info(`crawl url ${dataUrl.url} done!, Time request: ${dateTimeRequest}s`);
     }
     // Check if the file has been crawled or not, if crawled, turn it OFF
     statusCrawl = 'OFF';
@@ -297,10 +294,34 @@ async function detailWarehouses(statusCrawl) {
 }
 
 function removeFolderLogs() {
-  removeFile(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`);
-  removeFile(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`);
-  removeFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
-  removeFile(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`);
+  removeFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`);
+  removeFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_URL_PROVINCES}`);
+  removeFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
+  removeFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_DATA_WAREHOUSE}`);
+}
+
+async function resetFolderLogs() {
+  const currentYear = moment().format('YYYY');
+  const currentMonth = moment().format('MM');
+  const currentDay = moment().format('DD');
+  const currentHours = moment().format('HH');
+  const currentMinute = moment().format('mm');
+  const currentSecond = moment().format('ss');
+  winston.info(currentDay);
+  if (fs.existsSync(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`)) {
+    let redFileUrlWarehouse: any = await readDataFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
+    if (redFileUrlWarehouse.length === 0) {
+      throw new Error('The data has not been crawled, please finish crawling and then continue');
+    }
+    redFileUrlWarehouse = JSON.parse(redFileUrlWarehouse);
+    const result = redFileUrlWarehouse.filter((url) => url.status === 0);
+    if (result.length === 0) {
+      return await mkdir(`${FOLDER_FILE_JSON}/${currentYear}-${currentMonth}-${currentDay}-${currentHours}:${currentMinute}:${currentSecond}`);
+    } else {
+      throw new Error('The data has not been crawled, please finish crawling and then continue');
+    }
+  }
+  throw new Error('The data has not been crawled, please finish crawling and then continue');
 }
 
 async function totalPages(url) {
@@ -315,27 +336,26 @@ async function totalPages(url) {
   return pages === '' ? 1 : Number(pages);
 }
 
-async function createFolder(folder) {
+async function createFolderIfNotExists(folder) {
   if (!fs.existsSync(folder)) {
     await mkdir(folder);
   }
 }
 
-async function removeFile(path) {
+async function removeFileIfNotExists(path) {
   if (fs.existsSync(path)) {
     return await unlink(path);
   }
 }
 
-async function createPath(path) {
+async function createFileIfNotExists(path) {
   // Check if the file exists or not
   if (!fs.existsSync(path)) {
-    // Create file;
     await writeFile(path, '');
   }
 }
 
-async function readDataFile(path) {
+async function readDataFileIfNotExists(path) {
   if (fs.existsSync(path)) {
     return readFile(path, 'utf-8');
   } else {
@@ -345,7 +365,7 @@ async function readDataFile(path) {
 
 async function getDataFileNotTimeOut(path, functionPass) {
   // Read file json
-  let data: any = await readDataFile(`${FOLDER_FILE_JSON}/${path}`);
+  let data: any = await readDataFileIfNotExists(`${FOLDER_FILE_JSON}/${path}`);
   // Check if the json file urlDetailsWareHouse.json has data, if file no data -> get data in function crawlUrlWareHouse()
   if (Object.keys(data).length === 0 || data.constructor === Object) {
     data = await functionPass();
@@ -359,14 +379,13 @@ async function getDataFileNotTimeOut(path, functionPass) {
 async function getDataFileTimeOut(path, functionPass, pathPass) {
   try {
     // Read file json
-    let data: any = await readDataFile(`${FOLDER_FILE_JSON}/${path}`);
+    let data: any = await readDataFileIfNotExists(`${FOLDER_FILE_JSON}/${path}`);
     // Check if the json file urlDetailsWareHouse.json has data, if file no data -> get data in function crawlUrlWareHouse()
     if (Object.keys(data).length === 0 || data.constructor === Object) {
       data = await functionPass();
-      winston.info('6666', data);
     } else {
       data = JSON.parse(data);
-      let dataTimeout: any = await readDataFile(`${FOLDER_FILE_JSON}/${pathPass}`);
+      let dataTimeout: any = await readDataFileIfNotExists(`${FOLDER_FILE_JSON}/${pathPass}`);
       dataTimeout = JSON.parse(dataTimeout);
       const checkStatus = dataTimeout.find((url) => url.status === 0);
       if (checkStatus) {
@@ -383,10 +402,9 @@ async function getDataFileTimeOut(path, functionPass, pathPass) {
 async function waitingTime() {
   return await new Promise((resolve: any) => {
     setTimeout(() => {
-      winston.info('waitingTime');
       resolve();
     }, TIMEOUT_BETWEEN_REQUEST);
   });
 }
 
-export { detailWarehouses, removeFolderLogs, readDataFile, createPath, createFolder };
+export { detailWarehouses, removeFolderLogs, readDataFileIfNotExists, createFileIfNotExists, createFolderIfNotExists, resetFolderLogs };

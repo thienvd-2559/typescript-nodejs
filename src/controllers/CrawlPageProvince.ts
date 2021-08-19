@@ -1,4 +1,4 @@
-import { detailWarehouses, removeFolderLogs, readDataFile, createFolder } from '../services/CrawlPageProvince';
+import { detailWarehouses, removeFolderLogs, readDataFileIfNotExists, createFolderIfNotExists, resetFolderLogs } from '../services/CrawlPageProvince';
 import { FOLDER_FILE_JSON, FILE_STATUS_CRAWL, FILE_URL_WAREHOUSE, FILE_TIME, FILE_PROVINCES } from '../config/ConstFileJson';
 import { writeFile } from 'fs/promises';
 import fs from 'fs';
@@ -6,7 +6,7 @@ import moment from 'moment';
 
 let statusCrawl = 'OFF';
 export default class CrawlPageProvinceController {
-  public static async detailWarehouses(req, res, next): Promise<any> {
+  public static async crawlDetailWarehouses(req, res, next): Promise<any> {
     try {
       if (!fs.existsSync(`${FOLDER_FILE_JSON}/${FILE_PROVINCES}`)) {
         const startTime = moment().format('DD/MM/YYYY, HH:mm:ss ');
@@ -14,7 +14,7 @@ export default class CrawlPageProvinceController {
       }
       let dateTime = '';
 
-      await createFolder(FOLDER_FILE_JSON);
+      await createFolderIfNotExists(FOLDER_FILE_JSON);
       if (!fs.existsSync(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`)) {
         await writeFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`, '');
       }
@@ -23,10 +23,10 @@ export default class CrawlPageProvinceController {
         await writeFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`, statusCrawl);
       }
       // Read file
-      const getFileStatusCrawl: any = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`);
-      if (getFileStatusCrawl === 'ON') {
-        let urlWarehouse: any = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
-        dateTime = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_TIME}`);
+      const fileStatusCrawl: any = await readDataFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`);
+      if (fileStatusCrawl === 'ON') {
+        let urlWarehouse: any = await readDataFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
+        dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_TIME}`);
         if (urlWarehouse.length === 0) {
           return res.json({
             message: `Crawling from ${dateTime} is in progress. Please wait until it is completed`,
@@ -38,22 +38,22 @@ export default class CrawlPageProvinceController {
         if (result.length === 0) {
           statusCrawl = 'OFF';
           await writeFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`, statusCrawl);
-          dateTime = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_TIME}`);
+          dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_TIME}`);
           return res.json({
             message: `Started crawling from ${dateTime} `,
           });
         }
-        dateTime = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_TIME}`);
+        dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_TIME}`);
         return res.json({
           message: `Crawling from ${dateTime} is in progress. Please wait until it is completed`,
         });
       } else {
         statusCrawl = 'ON';
         await writeFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`, statusCrawl);
-        let urlWarehouse: any = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
+        let urlWarehouse: any = await readDataFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_URL_WAREHOUSE}`);
         if (urlWarehouse.length === 0) {
           detailWarehouses(statusCrawl);
-          dateTime = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_TIME}`);
+          dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_TIME}`);
           return res.json({
             message: `Started crawling from ${dateTime}`,
           });
@@ -64,14 +64,14 @@ export default class CrawlPageProvinceController {
         if (result.length === 0) {
           statusCrawl = 'OFF';
           await writeFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`, statusCrawl);
-          dateTime = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_TIME}`);
+          dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_TIME}`);
           return res.json({
             message: `Crawling from ${dateTime} has been completed. Please run the delete command before continuing to crawl`,
           });
         }
 
         detailWarehouses(statusCrawl);
-        dateTime = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_TIME}`);
+        dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_TIME}`);
         return res.json({
           message: `Started crawling from ${dateTime}`,
         });
@@ -83,11 +83,11 @@ export default class CrawlPageProvinceController {
     }
   }
 
-  public static async removeFolderLogs(req, res, next): Promise<any> {
+  public static async removeFolder(req, res, next): Promise<any> {
     try {
-      const data: any = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`);
+      const data: any = await readDataFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`);
       if (data === 'ON') {
-        const dateTime = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_TIME}`);
+        const dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_JSON}/${FILE_TIME}`);
         return res.json({
           message: `Crawling from ${dateTime} is in progress. Please wait until it is completed`,
         });
@@ -104,22 +104,15 @@ export default class CrawlPageProvinceController {
     }
   }
 
-  public static async resetFolderLogs(req, res, next): Promise<any> {
+  public static async resetFolder(req, res, next): Promise<any> {
     try {
-      const data: any = await readDataFile(`${FOLDER_FILE_JSON}/${FILE_STATUS_CRAWL}`);
-      // if (data === 'ON') {
-      //   return res.json({
-      //     message: 'Data is crawling, Cannot be deleted !',
-      //   });
-      // } else {
-      //   await removeFolderLogs();
-      //   return res.json({
-      //     message: 'Successfully deleted',
-      //   });
-      // }
-    } catch (err) {
+      const data: any = await resetFolderLogs();
       return res.json({
-        message: 'Has a error, Please check back data file',
+        message: 'create folder success',
+      });
+    } catch (error) {
+      return res.json({
+        message: error.message,
       });
     }
   }
