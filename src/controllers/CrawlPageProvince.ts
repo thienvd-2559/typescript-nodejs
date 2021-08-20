@@ -8,6 +8,7 @@ let statusCrawl = 'OFF';
 export default class CrawlPageProvinceController {
   public static async crawlDetailWarehouses(req, res, next): Promise<any> {
     try {
+      await createFolderIfNotExists(`${FOLDER_FILE_DATA}`);
       if (!fs.existsSync(`${FOLDER_FILE_DATA}/${FILE_TIME}`)) {
         const startTime = moment().format('DD/MM/YYYY, HH:mm:ss ');
         await writeFile(`${FOLDER_FILE_DATA}/${FILE_TIME}`, startTime);
