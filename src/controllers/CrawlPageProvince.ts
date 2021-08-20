@@ -4,7 +4,7 @@ import { writeFile } from 'fs/promises';
 import fs from 'fs';
 import moment from 'moment';
 
-let statusCrawl = 'OFF';
+let statusCrawl = 'DONE';
 export default class CrawlPageProvinceController {
   public static async crawlDetailWarehouses(req, res, next): Promise<any> {
     try {

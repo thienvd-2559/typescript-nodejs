@@ -41,82 +41,90 @@ async function crawlUrlProvinces() {
 }
 
 async function saveUrlProvinces() {
-  let urlProvinces = [];
-  await createFileIfNotExists(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_PROVINCES}`);
-  const provinces = await getDataFileNotTimeOut(`${FILE_PROVINCES}`, crawlUrlProvinces);
-  const dataFileUrlProvince = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_URL_PROVINCES}`);
-  if (Object.keys(dataFileUrlProvince).length !== 0 && dataFileUrlProvince.constructor !== Object) {
-    urlProvinces = JSON.parse(dataFileUrlProvince);
-  }
-
-  for (const province of provinces) {
-    try {
-      if (province.status !== 0) {
-        continue;
-      }
-      const totalPage = await totalPages(province.url);
-      for (let k = 0; k < totalPage; k++) {
-        const optionsPaging = {
-          method: 'GET',
-          uri: `${province.url}?page=${k + 1}`,
-        };
-        urlProvinces.push({
-          url: optionsPaging.uri,
-          status: 0,
-        });
-        province.status = 1;
-
-        await writeFile(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_URL_PROVINCES}`, JSON.stringify(urlProvinces));
-        winston.info(`Save url ${optionsPaging.uri} done !`);
-
-        await writeFile(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_PROVINCES}`, JSON.stringify(provinces));
-      }
-    } catch (error) {
-      winston.info(error);
+  try {
+    let urlProvinces = [];
+    await createFileIfNotExists(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_PROVINCES}`);
+    const provinces = await getDataFileNotTimeOut(`${FILE_PROVINCES}`, crawlUrlProvinces);
+    const dataFileUrlProvince = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_URL_PROVINCES}`);
+    if (Object.keys(dataFileUrlProvince).length !== 0 && dataFileUrlProvince.constructor !== Object) {
+      urlProvinces = JSON.parse(dataFileUrlProvince);
     }
-  }
-  winston.info('[Crawl success url province]');
 
-  return urlProvinces;
+    for (const province of provinces) {
+      try {
+        if (province.status !== 0) {
+          continue;
+        }
+        const totalPage = await totalPages(province.url);
+        for (let k = 0; k < totalPage; k++) {
+          const optionsPaging = {
+            method: 'GET',
+            uri: `${province.url}?page=${k + 1}`,
+          };
+          urlProvinces.push({
+            url: optionsPaging.uri,
+            status: 0,
+          });
+          province.status = 1;
+
+          await writeFile(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_URL_PROVINCES}`, JSON.stringify(urlProvinces));
+          winston.info(`Save url ${optionsPaging.uri} done !`);
+
+          await writeFile(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_PROVINCES}`, JSON.stringify(provinces));
+        }
+      } catch (error) {
+        winston.info(error);
+      }
+    }
+    winston.info('[Crawl success url province]');
+
+    return urlProvinces;
+  } catch (error) {
+    winston.error(error);
+  }
 }
 
 async function crawlUrlWareHouses() {
-  winston.info('[start crawl url warehouse]');
-  let urlWarehouse = [];
-  await createFileIfNotExists(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_URL_PROVINCES}`);
-  const urlProvinces = await getDataFileTimeOut(`${FILE_URL_PROVINCES}`, saveUrlProvinces, FILE_PROVINCES);
-  const dataFileUrlWarehouse = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_URL_WAREHOUSE}`);
+  try {
+    winston.info('[start crawl url warehouse]');
+    let urlWarehouse = [];
+    await createFileIfNotExists(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_URL_PROVINCES}`);
+    const urlProvinces = await getDataFileTimeOut(`${FILE_URL_PROVINCES}`, saveUrlProvinces, FILE_PROVINCES);
+    const dataFileUrlWarehouse = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_URL_WAREHOUSE}`);
 
-  if (Object.keys(dataFileUrlWarehouse).length !== 0 && dataFileUrlWarehouse.constructor !== Object) {
-    urlWarehouse = JSON.parse(dataFileUrlWarehouse);
-  }
-
-  for (const province of urlProvinces) {
-    if (province.status !== 0) {
-      continue;
+    if (Object.keys(dataFileUrlWarehouse).length !== 0 && dataFileUrlWarehouse.constructor !== Object) {
+      urlWarehouse = JSON.parse(dataFileUrlWarehouse);
     }
 
-    const optionsPaging = {
-      method: 'GET',
-      uri: `${province.url}`,
-    };
-    const resultPaging = await request_promise(optionsPaging);
-    const operatorPaging = cheerio.load(resultPaging);
-    operatorPaging(LIST_WAREHOUSES.DOM_URL_WAREHOUSES).each(function () {
-      urlWarehouse.push({
-        url: `${URL_HOME_PAGE}${operatorPaging(this).find('a').attr('href')}`,
-        status: 0,
+    for (const province of urlProvinces) {
+      if (province.status !== 0) {
+        continue;
+      }
+
+      const optionsPaging = {
+        method: 'GET',
+        uri: `${province.url}`,
+      };
+      const resultPaging = await request_promise(optionsPaging);
+      const operatorPaging = cheerio.load(resultPaging);
+      operatorPaging(LIST_WAREHOUSES.DOM_URL_WAREHOUSES).each(function () {
+        urlWarehouse.push({
+          url: `${URL_HOME_PAGE}${operatorPaging(this).find('a').attr('href')}`,
+          status: 0,
+        });
       });
-    });
-    province.status = 1;
+      province.status = 1;
 
-    await writeFile(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_URL_WAREHOUSE}`, JSON.stringify(urlWarehouse));
-    winston.info(`Save url warehouse: ${optionsPaging.uri} done !`);
+      await writeFile(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_URL_WAREHOUSE}`, JSON.stringify(urlWarehouse));
+      winston.info(`Save url warehouse: ${optionsPaging.uri} done !`);
 
-    await writeFile(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_URL_PROVINCES}`, JSON.stringify(urlProvinces));
+      await writeFile(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_URL_PROVINCES}`, JSON.stringify(urlProvinces));
+    }
+
+    return urlWarehouse;
+  } catch (error) {
+    winston.info(error);
   }
-
-  return urlWarehouse;
 }
 
 async function crawlDetailWarehouses(statusCrawl) {
