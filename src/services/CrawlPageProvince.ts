@@ -282,8 +282,8 @@ async function crawlDetailWarehouses(statusCrawl) {
       const dateTimeRequest = (Date.now() - timeStartCrawl) / 1000;
       winston.info(`Crawl url ${dataUrl.url} done!. Time request: ${dateTimeRequest}s`);
     }
-    // Check if the file has been crawled or not, if crawled, turn it OFF
-    statusCrawl = 'dọne';
+    // Check if the file has been crawled or not, if crawled, statusCrawl = 'DONE';
+    statusCrawl = 'DONE';
     await writeFile(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`, statusCrawl);
     winston.info('[Crawl success data details ware house]');
 

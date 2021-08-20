@@ -15,70 +15,27 @@ export default class CrawlPageProvinceController {
       }
       let dateTime = '';
       await createFolderIfNotExists(FOLDER_FILE_DATA);
-      if (!fs.existsSync(`${FOLDER_FILE_DATA}/${FILE_URL_WAREHOUSE}`)) {
-        await writeFile(`${FOLDER_FILE_DATA}/${FILE_URL_WAREHOUSE}`, '');
-      }
-      // Check if there is data, if not, then go with OFF
+      // // Check if there is data, if not, then go with OFF
       if (!fs.existsSync(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`)) {
         await writeFile(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`, statusCrawl);
       }
       // Read file
       const fileStatusCrawl: any = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`);
+      dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
       if (fileStatusCrawl === 'ON') {
-        let urlWarehouse: any = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_URL_WAREHOUSE}`);
-        dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
-        if (urlWarehouse.length === 0) {
-          return res.json({
-            message: `Crawling from ${dateTime} is in progress. Please wait until it is completed`,
-          });
-        }
-
-        urlWarehouse = JSON.parse(urlWarehouse);
-        const result = urlWarehouse.filter((url) => url.status === 0);
-        if (result.length === 0) {
-          statusCrawl = 'OFF';
-          await writeFile(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`, statusCrawl);
-          dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
-
-          return res.json({
-            message: `Started crawling from ${dateTime} `,
-          });
-        }
-
-        dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
-
         return res.json({
           message: `Crawling from ${dateTime} is in progress. Please wait until it is completed`,
         });
-      } else {
+      } else if (fileStatusCrawl === 'OFF') {
         statusCrawl = 'ON';
         await writeFile(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`, statusCrawl);
-        let urlWarehouse: any = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_URL_WAREHOUSE}`);
-        if (urlWarehouse.length === 0) {
-          crawlDetailWarehouses(statusCrawl);
-          dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
-
-          return res.json({
-            message: `Started crawling from ${dateTime}`,
-          });
-        }
-
-        urlWarehouse = JSON.parse(urlWarehouse);
-        const result = urlWarehouse.filter((url) => url.status === 0);
-        if (result.length === 0) {
-          statusCrawl = 'OFF';
-          await writeFile(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`, statusCrawl);
-          dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
-          return res.json({
-            message: `Crawling from ${dateTime} has been completed. Please run the delete command before continuing to crawl`,
-          });
-        }
-
         crawlDetailWarehouses(statusCrawl);
-        dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
-
         return res.json({
           message: `Started crawling from ${dateTime}`,
+        });
+      } else if (fileStatusCrawl === 'DONE') {
+        return res.json({
+          message: `Crawling from ${dateTime} has been completed. Please run the delete command before continuing to crawl`,
         });
       }
     } catch (error) {
@@ -91,13 +48,15 @@ export default class CrawlPageProvinceController {
   public static async removeFolder(req, res, next): Promise<any> {
     try {
       const data: any = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`);
-      if (data === 'ON') {
+      if (data !== 'DONE') {
         const dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
         return res.json({
           message: `Crawling from ${dateTime} is in progress. Please wait until it is completed`,
         });
       } else {
         await removeFolderLogs();
+        statusCrawl = 'OFF';
+        await writeFile(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`, statusCrawl);
         return res.json({
           message: 'Successfully deleted',
         });
