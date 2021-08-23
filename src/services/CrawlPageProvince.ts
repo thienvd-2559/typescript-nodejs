@@ -359,8 +359,9 @@ async function readDataFileIfNotExists(path) {
 
 async function getCrawlInfor() {
   let urlWarehouses: any = '';
-  if (fs.existsSync(`${FOLDER_FILE_DATA}/${FILE_URL_WAREHOUSE}`)) {
-    urlWarehouses = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_URL_WAREHOUSE}`);
+  const pathFileUrlWarehouse = `${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_URL_WAREHOUSE}`;
+  if (fs.existsSync(pathFileUrlWarehouse)) {
+    urlWarehouses = await readDataFileIfNotExists(pathFileUrlWarehouse);
   } else {
     return null;
   }
