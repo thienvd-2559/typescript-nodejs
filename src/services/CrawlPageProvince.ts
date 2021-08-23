@@ -356,7 +356,7 @@ async function readDataFileIfNotExists(path) {
   }
 }
 
-async function getCrawlInfor() {
+async function getCrawlInfo() {
   let urlWarehouses: any = '';
   const pathFileUrlWarehouse = `${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_URL_WAREHOUSE}`;
   if (fs.existsSync(pathFileUrlWarehouse)) {
@@ -427,4 +427,4 @@ async function waitingTime() {
   });
 }
 
-export { crawlDetailWarehouses, removeFolderLogs, readDataFileIfNotExists, createFileIfNotExists, createFolderIfNotExists, getCrawlInfor, createFolderLogs };
+export { crawlDetailWarehouses, removeFolderLogs, readDataFileIfNotExists, createFileIfNotExists, createFolderIfNotExists, getCrawlInfo, createFolderLogs };
