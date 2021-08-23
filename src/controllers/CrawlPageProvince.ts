@@ -1,5 +1,5 @@
 import { crawlDetailWarehouses, removeFolderLogs, readDataFileIfNotExists, createFolderIfNotExists, getCrawlInfor, createFolderLogs } from '../services/CrawlPageProvince';
-import { FOLDER_FILE_DATA, FILE_STATUS_CRAWL, FILE_URL_WAREHOUSE, FILE_TIME, FILE_PROVINCES } from '../config/ConstFileJson';
+import { FOLDER_FILE_DATA, FILE_STATUS_CRAWL, FILE_URL_WAREHOUSE, FILE_TIME, FILE_PROVINCES, FOLDER_DEBUG } from '../config/ConstFileJson';
 import { writeFile } from 'fs/promises';
 import fs from 'fs';
 import moment from 'moment';
@@ -14,7 +14,7 @@ export default class CrawlPageProvinceController {
         await writeFile(`${FOLDER_FILE_DATA}/${FILE_TIME}`, startTime);
       }
       let dateTime = '';
-      // // Check if there is data, if not, then go with OFF
+      // Check if there is data, if not, then go with OFF
       if (!fs.existsSync(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`)) {
         await writeFile(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`, statusCrawl);
       }
@@ -38,6 +38,11 @@ export default class CrawlPageProvinceController {
           progress: crawlInfor.progress + '%',
         });
       } else if (fileStatusCrawl === 'OFF') {
+        if (!fs.existsSync(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_PROVINCES}`)) {
+          const startTime = moment().format('DD/MM/YYYY, HH:mm:ss');
+          await writeFile(`${FOLDER_FILE_DATA}/${FILE_TIME}`, startTime);
+        }
+        dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
         statusCrawl = 'ON';
         await writeFile(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`, statusCrawl);
         crawlDetailWarehouses(statusCrawl);
