@@ -7,7 +7,7 @@ Installed chrome
 
 > yarn install
 
-Copy .env
+Copy file .env
 
 > cp .env .env.example
 >
