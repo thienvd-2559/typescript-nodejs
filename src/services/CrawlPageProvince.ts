@@ -357,6 +357,32 @@ async function readDataFileIfNotExists(path) {
   }
 }
 
+async function getCrawlInfor() {
+  let urlWarehouses: any = '';
+  if (fs.existsSync(`${FOLDER_FILE_DATA}/${FILE_URL_WAREHOUSE}`)) {
+    urlWarehouses = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_URL_WAREHOUSE}`);
+  } else {
+    return null;
+  }
+
+  if (urlWarehouses === '') {
+    return null;
+  }
+
+  urlWarehouses = JSON.parse(urlWarehouses);
+  const totalUrl: number = urlWarehouses.length;
+  const crawledUrl: number = urlWarehouses.filter((url) => url.status === 1).length;
+  const remainUrl: number = totalUrl - crawledUrl;
+  const progress: number = +(crawledUrl * 100 / totalUrl).toFixed(2);
+
+  return {
+    totalUrl,
+    crawledUrl,
+    remainUrl,
+    progress,
+  };
+}
+
 async function getDataFileNotTimeOut(path, functionPass) {
   // Read file json
   let dataFile: any = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${path}`);
@@ -401,4 +427,4 @@ async function waitingTime() {
   });
 }
 
-export { crawlDetailWarehouses, removeFolderLogs, readDataFileIfNotExists, createFileIfNotExists, createFolderIfNotExists, createFolderLogs };
+export { crawlDetailWarehouses, removeFolderLogs, readDataFileIfNotExists, createFileIfNotExists, createFolderIfNotExists, getCrawlInfor, createFolderLogs };

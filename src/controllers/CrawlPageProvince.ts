@@ -1,4 +1,4 @@
-import { crawlDetailWarehouses, removeFolderLogs, readDataFileIfNotExists, createFolderIfNotExists, createFolderLogs } from '../services/CrawlPageProvince';
+import { crawlDetailWarehouses, removeFolderLogs, readDataFileIfNotExists, createFolderIfNotExists, getCrawlInfor, createFolderLogs } from '../services/CrawlPageProvince';
 import { FOLDER_FILE_DATA, FILE_STATUS_CRAWL, FILE_URL_WAREHOUSE, FILE_TIME, FILE_PROVINCES } from '../config/ConstFileJson';
 import { writeFile } from 'fs/promises';
 import fs from 'fs';
@@ -22,19 +22,34 @@ export default class CrawlPageProvinceController {
       const fileStatusCrawl: any = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`);
       dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
       if (fileStatusCrawl === 'ON') {
+        const crawlInfor = await getCrawlInfor();
+        if (!crawlInfor) {
+          return res.json({
+            message: 'Crawling is in progress. Please wait until it is completed',
+          });
+        }
+
         return res.json({
-          message: `Crawling from ${dateTime} is in progress. Please wait until it is completed`,
+          message: 'Crawling is in progress. Please wait until it is completed',
+          start_time: `${dateTime}`,
+          total: crawlInfor.totalUrl,
+          crawled: crawlInfor.crawledUrl,
+          remain: crawlInfor.remainUrl,
+          progress: crawlInfor.progress + '%',
         });
       } else if (fileStatusCrawl === 'OFF') {
         statusCrawl = 'ON';
         await writeFile(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`, statusCrawl);
         crawlDetailWarehouses(statusCrawl);
+
         return res.json({
-          message: `Started crawling from ${dateTime}`,
+          message: `Started crawling`,
+          start_time: `${dateTime}`,
         });
       } else if (fileStatusCrawl === 'DONE') {
         return res.json({
-          message: `Crawling from ${dateTime} has been completed. Please run the create folder command before continuing to crawl`,
+          message: `Crawling has been completed.`,
+          start_time: `${dateTime}`,
         });
       }
     } catch (error) {
@@ -49,8 +64,20 @@ export default class CrawlPageProvinceController {
       const dataFileStatusCrawl: any = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`);
       if (dataFileStatusCrawl !== 'DONE') {
         const dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
+        const crawlInfor = await getCrawlInfor();
+        if (!crawlInfor) {
+          return res.json({
+            message: 'Crawling is in progress. Please wait until it is completed',
+          });
+        }
+
         return res.json({
-          message: `Crawling from ${dateTime} is in progress. Please wait until it is completed`,
+          message: 'Crawling is in progress. Please wait until it is completed',
+          start_time: `${dateTime}`,
+          total: crawlInfor.totalUrl,
+          crawled: crawlInfor.crawledUrl,
+          remain: crawlInfor.remainUrl,
+          progress: crawlInfor.progress + '%',
         });
       } else {
         await removeFolderLogs();
