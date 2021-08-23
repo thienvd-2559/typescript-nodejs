@@ -2,7 +2,7 @@ import winston from '../config/winston';
 import request_promise from 'request-promise';
 import cheerio from 'cheerio';
 import { URL_HOME_PAGE, URL_PROVINCES, LIST_PROVINCES, LIST_WAREHOUSES, DETAILS_WAREHOUSE } from '../config/WarehouseCrawlDataConfig';
-import { FOLDER_FILE_DATA, FILE_PROVINCES, FILE_URL_PROVINCES, FILE_URL_WAREHOUSE, FILE_DATA_WAREHOUSE, TIMEOUT_BETWEEN_REQUEST, FILE_STATUS_CRAWL, FOLDER_DEBUG } from '../config/ConstFileJson';
+import { FOLDER_FILE_DATA, FILE_PROVINCES, FILE_URL_PROVINCES, FILE_URL_WAREHOUSE, FILE_DATA_WAREHOUSE, TIMEOUT_BETWEEN_REQUEST, FILE_STATUS_CRAWL, FOLDER_DEBUG, FILE_TIME } from '../config/ConstFileJson';
 import { normalizeText } from '../utils/string';
 import fs from 'fs';
 import fsPromises, { readFile, writeFile, unlink, mkdir } from 'fs/promises';
@@ -296,11 +296,10 @@ async function crawlDetailWarehouses(statusCrawl) {
     const currentHours = moment().format('HH');
     const currentMinute = moment().format('mm');
     const currentSecond = moment().format('ss');
-    fsPromises.rename(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}`, `${FOLDER_FILE_DATA}/${currentYear}-${currentMonth}-${currentDay}-${currentHours}:${currentMinute}:${currentSecond}`);
+    await fsPromises.rename(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}`, `${FOLDER_FILE_DATA}/${currentYear}-${currentMonth}-${currentDay}-${currentHours}:${currentMinute}:${currentSecond}`);
     // Check if the file has been crawled or not, if crawled, statusCrawl = 'DONE';
     statusCrawl = 'DONE';
     await writeFile(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`, statusCrawl);
-
     winston.info('[Crawl success data details ware house]');
 
     return [dataWarehouse];
