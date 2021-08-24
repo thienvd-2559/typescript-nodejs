@@ -1,4 +1,4 @@
-import { crawlDetailWarehouses, removeFolderLogs, readDataFileIfNotExists, createFolderIfNotExists, getCrawlInfo, getResponseWhileCrawling, createFolderLogs } from '../services/CrawlPageProvince';
+import { crawlDetailWarehouses, removeFolderLogs, readDataFileIfExists, createFolderIfNotExists, getCrawlInfo, getResponseWhileCrawling, createFolderLogs } from '../services/CrawlPageProvince';
 import { FOLDER_FILE_DATA, FILE_STATUS_CRAWL, FILE_URL_WAREHOUSE, FILE_TIME, FILE_PROVINCES, FOLDER_DEBUG } from '../config/ConstFileJson';
 import { writeFile } from 'fs/promises';
 import fs from 'fs';
@@ -6,7 +6,7 @@ import moment from 'moment';
 
 let statusCrawl = 'DONE';
 export default class CrawlPageProvinceController {
-  public static async crawlDetailWarehouses(req, res, next): Promise<any> {
+  public static async detailWarehouses(req, res, next): Promise<any> {
     try {
       await createFolderIfNotExists(`${FOLDER_FILE_DATA}`);
       if (!fs.existsSync(`${FOLDER_FILE_DATA}/${FILE_TIME}`)) {
@@ -19,8 +19,8 @@ export default class CrawlPageProvinceController {
         await writeFile(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`, statusCrawl);
       }
       // Read file
-      const fileStatusCrawl: any = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`);
-      dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
+      const fileStatusCrawl: any = await readDataFileIfExists(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`);
+      dateTime = await readDataFileIfExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
       if (fileStatusCrawl === 'ON') {
         const response = await getResponseWhileCrawling(dateTime);
 
@@ -30,10 +30,10 @@ export default class CrawlPageProvinceController {
           const startTime = moment().format('DD/MM/YYYY, HH:mm:ss');
           await writeFile(`${FOLDER_FILE_DATA}/${FILE_TIME}`, startTime);
         }
-        dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
+        dateTime = await readDataFileIfExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
         statusCrawl = 'ON';
         await writeFile(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`, statusCrawl);
-        crawlDetailWarehouses(statusCrawl);
+        crawlDetailWarehouses(statusCrawl, res);
 
         return res.json({
           message: `Started crawling`,
@@ -54,9 +54,9 @@ export default class CrawlPageProvinceController {
 
   public static async removeFolder(req, res, next): Promise<any> {
     try {
-      const dataFileStatusCrawl: any = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`);
+      const dataFileStatusCrawl: any = await readDataFileIfExists(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`);
       if (dataFileStatusCrawl !== 'DONE') {
-        const dateTime = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
+        const dateTime = await readDataFileIfExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
         const response = await getResponseWhileCrawling(dateTime);
 
         return res.json(response);
@@ -77,7 +77,7 @@ export default class CrawlPageProvinceController {
 
   public static async resetFolder(req, res, next): Promise<any> {
     try {
-      const dataFileStatusCrawl: any = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`);
+      const dataFileStatusCrawl: any = await readDataFileIfExists(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`);
       if (dataFileStatusCrawl === 'DONE') {
         await createFolderLogs();
         statusCrawl = 'OFF';
