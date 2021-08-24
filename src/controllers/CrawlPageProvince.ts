@@ -1,4 +1,4 @@
-import { crawlDetailWarehouses, removeFolderLogs, readDataFileIfExists, createFolderIfNotExists, createFolderLogs } from '../services/CrawlPageProvince';
+import { crawlDetailWarehouses, removeFolderLogs, readDataFileIfExists, createFolderIfNotExists, getCrawlInfo, getResponseWhileCrawling, createFolderLogs } from '../services/CrawlPageProvince';
 import { FOLDER_FILE_DATA, FILE_STATUS_CRAWL, FILE_URL_WAREHOUSE, FILE_TIME, FILE_PROVINCES, FOLDER_DEBUG } from '../config/ConstFileJson';
 import { writeFile } from 'fs/promises';
 import fs from 'fs';
@@ -22,9 +22,9 @@ export default class CrawlPageProvinceController {
       const fileStatusCrawl: any = await readDataFileIfExists(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`);
       dateTime = await readDataFileIfExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
       if (fileStatusCrawl === 'ON') {
-        return res.json({
-          message: `Crawling from ${dateTime} is in progress. Please wait until it is completed`,
-        });
+        const response = await getResponseWhileCrawling(dateTime);
+
+        return res.json(response);
       } else if (fileStatusCrawl === 'OFF') {
         if (!fs.existsSync(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_PROVINCES}`)) {
           const startTime = moment().format('DD/MM/YYYY, HH:mm:ss');
@@ -36,11 +36,13 @@ export default class CrawlPageProvinceController {
         crawlDetailWarehouses(statusCrawl, res);
 
         return res.json({
-          message: `Started crawling from ${dateTime}`,
+          message: `Started crawling`,
+          start_time: `${dateTime}`,
         });
       } else if (fileStatusCrawl === 'DONE') {
         return res.json({
-          message: `Crawling from ${dateTime} has been completed. Please run the create folder command before continuing to crawl`,
+          message: `Crawling has been completed.`,
+          start_time: `${dateTime}`,
         });
       }
     } catch (error) {
@@ -55,9 +57,9 @@ export default class CrawlPageProvinceController {
       const dataFileStatusCrawl: any = await readDataFileIfExists(`${FOLDER_FILE_DATA}/${FILE_STATUS_CRAWL}`);
       if (dataFileStatusCrawl !== 'DONE') {
         const dateTime = await readDataFileIfExists(`${FOLDER_FILE_DATA}/${FILE_TIME}`);
-        return res.json({
-          message: `Crawling from ${dateTime} is in progress. Please wait until it is completed`,
-        });
+        const response = await getResponseWhileCrawling(dateTime);
+
+        return res.json(response);
       } else {
         await removeFolderLogs();
         statusCrawl = 'OFF';

@@ -350,6 +350,50 @@ async function readDataFileIfExists(path) {
   if (fs.existsSync(path)) {
     return readFile(path, 'utf-8');
   }
+
+  return null;
+}
+
+async function getCrawlInfo() {
+  const pathFileUrlWarehouse = `${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_URL_WAREHOUSE}`;
+  let urlWarehouses: any = await readDataFileIfNotExists(pathFileUrlWarehouse);
+  if (!urlWarehouses) {
+    return null;
+  }
+
+  urlWarehouses = JSON.parse(urlWarehouses);
+  const totalUrl: number = urlWarehouses.length;
+  const crawledUrl: number = urlWarehouses.filter((url) => url.status === 1).length;
+  const remainUrl: number = totalUrl - crawledUrl;
+  const progress: number = +(crawledUrl * 100 / totalUrl).toFixed(2);
+
+  return {
+    totalUrl,
+    crawledUrl,
+    remainUrl,
+    progress,
+  };
+}
+
+async function getResponseWhileCrawling(dateTime) {
+  let response = {};
+  const crawlInfo = await getCrawlInfo();
+  if (!crawlInfo) {
+    response = {
+      message: 'Crawling is in progress. Please wait until it is completed',
+    };
+  } else {
+    response = {
+      message: 'Crawling is in progress. Please wait until it is completed',
+      start_time: `${dateTime}`,
+      total: crawlInfo.totalUrl,
+      crawled: crawlInfo.crawledUrl,
+      remain: crawlInfo.remainUrl,
+      progress: crawlInfo.progress + '%',
+    };
+  }
+
+  return response;
 }
 
 async function getDataFileNotTimeOut(path, functionPass) {
@@ -396,4 +440,4 @@ async function waitingTime() {
   });
 }
 
-export { crawlDetailWarehouses, removeFolderLogs, readDataFileIfExists, createFileIfNotExists, createFolderIfNotExists, createFolderLogs };
+export { crawlDetailWarehouses, removeFolderLogs, readDataFileIfExists, createFileIfNotExists, createFolderIfNotExists, getCrawlInfo, getResponseWhileCrawling, createFolderLogs };
