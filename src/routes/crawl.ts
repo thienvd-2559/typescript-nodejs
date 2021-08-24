@@ -19,7 +19,7 @@ router.get('/warehouse-detail-page/:url', WarehouseController.detailWarehouse);
 router.get('/warehouse-crawl-detail-page-province', WarehouseController.detailProvince);
 
 // crawl page province
-router.get('/crawl-detail-page-province', CrawlPageProvinceController.crawlDetailWarehouses);
+router.get('/crawl-detail-page-province', CrawlPageProvinceController.detailWarehouses);
 router.delete('/remove-folder-logs', CrawlPageProvinceController.removeFolder);
 router.get('/reset-folder-logs', CrawlPageProvinceController.resetFolder);
 
