@@ -353,19 +353,15 @@ async function createFileIfNotExists(path) {
 async function readDataFileIfNotExists(path) {
   if (fs.existsSync(path)) {
     return readFile(path, 'utf-8');
+  } else {
+    return null;
   }
 }
 
 async function getCrawlInfo() {
-  let urlWarehouses: any = '';
   const pathFileUrlWarehouse = `${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${FILE_URL_WAREHOUSE}`;
-  if (fs.existsSync(pathFileUrlWarehouse)) {
-    urlWarehouses = await readDataFileIfNotExists(pathFileUrlWarehouse);
-  } else {
-    return null;
-  }
-
-  if (urlWarehouses === '') {
+  let urlWarehouses: any = await readDataFileIfNotExists(pathFileUrlWarehouse);
+  if (!urlWarehouses) {
     return null;
   }
 
