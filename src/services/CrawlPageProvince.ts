@@ -353,9 +353,9 @@ async function createFileIfNotExists(path) {
 async function readDataFileIfNotExists(path) {
   if (fs.existsSync(path)) {
     return readFile(path, 'utf-8');
-  } else {
-    return null;
   }
+
+  return null;
 }
 
 async function getCrawlInfo() {
