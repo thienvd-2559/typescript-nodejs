@@ -379,6 +379,27 @@ async function getCrawlInfo() {
   };
 }
 
+async function getResponseWhileCrawling(dateTime) {
+  let response = {};
+  const crawlInfo = await getCrawlInfo();
+  if (!crawlInfo) {
+    response = {
+      message: 'Crawling is in progress. Please wait until it is completed',
+    };
+  } else {
+    response = {
+      message: 'Crawling is in progress. Please wait until it is completed',
+      start_time: `${dateTime}`,
+      total: crawlInfo.totalUrl,
+      crawled: crawlInfo.crawledUrl,
+      remain: crawlInfo.remainUrl,
+      progress: crawlInfo.progress + '%',
+    };
+  }
+
+  return response;
+}
+
 async function getDataFileNotTimeOut(path, functionPass) {
   // Read file json
   let dataFile: any = await readDataFileIfNotExists(`${FOLDER_FILE_DATA}/${FOLDER_DEBUG}/${path}`);
@@ -423,4 +444,4 @@ async function waitingTime() {
   });
 }
 
-export { crawlDetailWarehouses, removeFolderLogs, readDataFileIfNotExists, createFileIfNotExists, createFolderIfNotExists, getCrawlInfo, createFolderLogs };
+export { crawlDetailWarehouses, removeFolderLogs, readDataFileIfNotExists, createFileIfNotExists, createFolderIfNotExists, getCrawlInfo, getResponseWhileCrawling, createFolderLogs };
